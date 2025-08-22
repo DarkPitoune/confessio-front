@@ -1,19 +1,23 @@
-import { Sheet, SheetRef } from "react-modal-sheet";
 import { components } from "@/types";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { Sheet, SheetRef } from "react-modal-sheet";
+import "./ModalSheet.css";
 
 export function ModalSheet({
-  searchResults
+  searchResults,
 }: {
   searchResults: components["schemas"]["SearchResult"] | undefined;
 }) {
   const sheetRef = useRef<SheetRef>(null);
+  const [selectedChurch, setSelectedChurch] = useState<
+    components["schemas"]["SearchResult"]["churches"][number] | undefined
+  >(undefined);
 
   return (
     <Sheet
       isOpen
       ref={sheetRef}
-      snapPoints={[-30, 0.2]}
+      snapPoints={[0.5, 140]}
       initialSnap={1}
       dragCloseThreshold={1}
       onClose={() => sheetRef.current?.snapTo(1)}
@@ -21,21 +25,40 @@ export function ModalSheet({
       <Sheet.Container>
         <Sheet.Header />
         <Sheet.Content>
-          <Sheet.Scroller draggableAt="both">
-            <div className="px-6 py-4 space-y-4">
-              {searchResults?.churches?.map((item) => (
-                <div
-                  key={item.uuid}
-                  className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <h3 className="font-medium text-gray-900 mb-2">
-                    {item.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">{item.address}</p>
+          {selectedChurch ? (
+            <>
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">
+                  {selectedChurch.name}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {selectedChurch.address}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-white">
+                Horaires de confession proche de vous
+              </div>
+              <Sheet.Scroller draggableAt="top">
+                <div className="px-6 py-4 space-y-4">
+                  {searchResults?.churches?.map((item) => (
+                    <button
+                      onClick={() => setSelectedChurch(item)}
+                      key={item.uuid}
+                      className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <h3 className="font-medium text-gray-900 mb-2">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm text-gray-600">{item.address}</p>
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </Sheet.Scroller>
+              </Sheet.Scroller>
+            </>
+          )}
         </Sheet.Content>
       </Sheet.Container>
     </Sheet>

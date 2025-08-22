@@ -1,15 +1,15 @@
 import { components } from "@/types";
-import { Map } from "leaflet";
-import { useState } from "react";
 import clsx from "clsx";
+import { Map } from "leaflet";
 import Image from "next/image";
+import { useState } from "react";
 
 export const SearchInput = ({
   map,
   data,
   isLoading,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
 }: {
   map: Map | null;
   data: components["schemas"]["AutocompleteItem"][];
@@ -17,9 +17,7 @@ export const SearchInput = ({
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }) => {
-  //TODO check for virtualkeyboard api instead of focus/blur
   const [isFocused, setIsFocused] = useState(false);
-
   const onClick = (item: components["schemas"]["AutocompleteItem"]) => () => {
     console.log("Clicked item:", item);
     if (map && item.latitude && item.longitude) {
@@ -35,7 +33,7 @@ export const SearchInput = ({
         "absolute flex flex-col items-stretch justify-start p-4",
         isFocused
           ? "inset-0 bg-deepblue transition-colors"
-          : "inset-x-0 rounded-full bg-transparent"
+          : "inset-x-0 rounded-full bg-transparent",
       ])}
       style={{ zIndex: 10_000 }} // to one-up the modal at the bottom
     >

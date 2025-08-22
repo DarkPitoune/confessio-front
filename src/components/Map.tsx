@@ -8,7 +8,7 @@ import { components } from "@/types";
 const Map = ({
   setMap,
   searchResults,
-  currentPosition
+  currentPosition,
 }: {
   setMap: (map: LeafletMap) => void;
   searchResults: components["schemas"]["SearchResult"] | undefined;

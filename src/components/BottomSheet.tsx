@@ -2,7 +2,7 @@ import { components } from "@/types";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 const BottomSheet = ({
-  searchResults
+  searchResults,
 }: {
   searchResults: components["schemas"]["SearchResult"] | undefined;
 }) => {
@@ -56,7 +56,7 @@ const BottomSheet = ({
       } else {
         return `translateY(${Math.min(
           dragOffset + viewportHeight * 0.8,
-          viewportHeight
+          viewportHeight,
         )}px)`;
       }
     }
@@ -97,7 +97,7 @@ const BottomSheet = ({
       setLastMoveTime(now);
       setLastMoveY(clientY);
     },
-    [isDragging, startY, lastMoveTime, lastMoveY]
+    [isDragging, startY, lastMoveTime, lastMoveY],
   );
 
   // Handle drag end with momentum
@@ -147,7 +147,7 @@ const BottomSheet = ({
         }
       }
     },
-    [position]
+    [position],
   );
 
   const handleTouchMoveOnContent = useCallback(
@@ -176,8 +176,8 @@ const BottomSheet = ({
       scrollStartY,
       isDragging,
       handleDragStart,
-      handleDragMove
-    ]
+      handleDragMove,
+    ],
   );
 
   const handleTouchEndOnContent = useCallback(() => {
@@ -269,7 +269,7 @@ const BottomSheet = ({
         WebkitTouchCallout: "none", // Prevent callout on iOS
         WebkitUserSelect: "none", // Prevent text selection
         userSelect: "none",
-        WebkitOverflowScrolling: "touch" // Smooth scrolling on iOS
+        WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
       }}
       tabIndex={-1}
       role="dialog"
@@ -283,7 +283,7 @@ const BottomSheet = ({
           touchAction: "none", // Prevent browser touch gestures
           WebkitTouchCallout: "none", // Prevent callout on iOS
           WebkitUserSelect: "none", // Prevent text selection
-          userSelect: "none"
+          userSelect: "none",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

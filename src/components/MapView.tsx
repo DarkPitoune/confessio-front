@@ -10,12 +10,12 @@ import Image from "next/image";
 
 const Map = dynamic(() => import("./Map"), {
   loading: () => <p>Loading map...</p>,
-  ssr: false
+  ssr: false,
 });
 const ModalSheet = dynamic(() => import("./ModalSheet"), {
   // this one's a shame, we'll need to display values from the server
   loading: () => <p>Loading modal sheet...</p>,
-  ssr: false
+  ssr: false,
 });
 
 export default function MapView() {
@@ -42,9 +42,9 @@ export default function MapView() {
     queryFn: async () => {
       if (debouncedSearchQuery.length === 0) return Promise.resolve([]);
       return fetch(
-        `https://confessio.fr/front/api/autocomplete?query=${debouncedSearchQuery}`
+        `https://confessio.fr/front/api/autocomplete?query=${debouncedSearchQuery}`,
       ).then((res) => res.json());
-    }
+    },
   });
 
   const { data: searchResults } = useQuery<
@@ -53,11 +53,11 @@ export default function MapView() {
     queryKey: ["churches", bounds],
     queryFn: async () => {
       return fetch(
-        `https://confessio.fr/front/api/search?min_lat=${bounds?.getSouth()}&min_lng=${bounds?.getWest()}&max_lat=${bounds?.getNorth()}&max_lng=${bounds?.getEast()}`
+        `https://confessio.fr/front/api/search?min_lat=${bounds?.getSouth()}&min_lng=${bounds?.getWest()}&max_lat=${bounds?.getNorth()}&max_lng=${bounds?.getEast()}`,
       ).then((res) => res.json());
     },
     staleTime: 200,
-    placeholderData: (previousdata) => previousdata // persist previous data to avoid flickering
+    placeholderData: (previousdata) => previousdata, // persist previous data to avoid flickering
   });
 
   useEffect(() => {
