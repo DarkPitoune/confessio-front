@@ -1,15 +1,28 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { SearchInput } from "./SearchInput";
-import { useEffect, useState } from "react";
-import { Map as LeafletMap, LatLngBounds } from "leaflet";
+import { setSelectedChurchAtom } from "@/store/atoms";
 import { components } from "@/types";
 import { useQuery } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import { LatLngBounds, Map as LeafletMap } from "leaflet";
+import dynamic from "next/dynamic";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { SearchInput } from "./SearchInput";
 
 const Map = dynamic(() => import("./Map"), {
-  loading: () => <p>Loading map...</p>,
+  loading: () => (
+    <div className="h-screen w-screen flex flex-col gap-4 items-center justify-center">
+        <Image
+          src="/spinner.svg"
+          alt="Loading"
+          width={40}
+          height={40}
+          className="animate-spin"
+        />
+        <p className="text-deepblue font-medium">Chargement...</p>
+    </div>
+  ),
   ssr: false,
 });
 const ModalSheet = dynamic(() => import("./ModalSheet"), {
@@ -23,6 +36,8 @@ export default function MapView() {
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [, setSelectedChurchAction] = useAtom(setSelectedChurchAtom);
+
   const [currentPosition, setCurrentPosition] = useState<{
     latitude: number;
     longitude: number;
@@ -47,11 +62,13 @@ export default function MapView() {
     },
   });
 
-  const { data: searchResults } = useQuery<
+  // TODO: debounce this to avoid concurrent requests
+  const { data: searchResults, isFetching: isSearchResultsFetching } = useQuery<
     components["schemas"]["SearchResult"]
   >({
     queryKey: ["churches", bounds],
     queryFn: async () => {
+      if (!bounds) return Promise.resolve(null);
       return fetch(
         `https://confessio.fr/front/api/search?min_lat=${bounds?.getSouth()}&min_lng=${bounds?.getWest()}&max_lat=${bounds?.getNorth()}&max_lng=${bounds?.getEast()}`,
       ).then((res) => res.json());
@@ -86,9 +103,9 @@ export default function MapView() {
 
   return (
     <>
-      <SearchInput
+<SearchInput
         map={map}
-        isLoading={isLoading}
+        isLoading={isLoading || isSearchResultsFetching}
         data={data || []}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -105,6 +122,7 @@ export default function MapView() {
           setMap={setMap}
           searchResults={searchResults}
           currentPosition={currentPosition}
+          setSelectedChurch={setSelectedChurchAction}
         />
       </div>
       <ModalSheet searchResults={searchResults} />

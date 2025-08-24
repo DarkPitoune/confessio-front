@@ -1,0 +1,21 @@
+/* All important here since we're overriding lib's styles */
+
+.react-modal-sheet-backdrop {
+}
+
+.react-modal-sheet-container {
+  background-color: var(--color-deepblue) !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.react-modal-sheet-header {
+  height: 16px !important;
+}
+
+.react-modal-sheet-drag-indicator {
+  /* custom styles */
+}
+
+.react-modal-sheet-content {
+  /* custom styles */
+}

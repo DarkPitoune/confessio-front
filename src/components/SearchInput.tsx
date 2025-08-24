@@ -2,7 +2,7 @@ import { components } from "@/types";
 import clsx from "clsx";
 import { Map } from "leaflet";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export const SearchInput = ({
   map,
@@ -18,8 +18,8 @@ export const SearchInput = ({
   setSearchQuery: (query: string) => void;
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const onClick = (item: components["schemas"]["AutocompleteItem"]) => () => {
-    console.log("Clicked item:", item);
     if (map && item.latitude && item.longitude) {
       const zoomLevel = item.type === "municipality" ? 13 : 15;
       map.setView([item.latitude, item.longitude], zoomLevel);
@@ -35,7 +35,7 @@ export const SearchInput = ({
           ? "inset-0 bg-deepblue transition-colors"
           : "inset-x-0 rounded-full bg-transparent",
       ])}
-      style={{ zIndex: 10_000 }} // to one-up the modal at the bottom
+      style={{ zIndex: 10_000 }}
     >
       <div className="p-2 border bg-white shadow-lg gap-2 border-gray-300 rounded-full text-black flex">
         <Image
@@ -45,6 +45,7 @@ export const SearchInput = ({
           height={24}
         />
         <input
+          ref={inputRef}
           type="text"
           placeholder="Chercher une église ou une ville"
           value={searchQuery}
@@ -55,7 +56,11 @@ export const SearchInput = ({
         />
         {searchQuery.length > 0 && (
           <button
-            onClick={() => setSearchQuery("")}
+            onClick={() => {
+              setSearchQuery("");
+              setIsFocused(false);
+              inputRef.current?.blur();
+            }}
             className="cursor-pointer"
             aria-label="Clear search"
             title="Clear search"
@@ -70,13 +75,17 @@ export const SearchInput = ({
             />
           </button>
         )}
+        {isLoading && (
+          <Image
+            src="/spinner.svg"
+            alt="Loading"
+            width={18}
+            height={18}
+            className="animate-spin"
+          />
+        )}
       </div>
       <ul className={clsx("min-h-0 overflow-scroll", { hidden: !isFocused })}>
-        {isLoading && (
-          <li className="p-2 text-white">
-            <div className="flex items-center justify-center">Chargement</div>
-          </li>
-        )}
         {data.map((item, index) => (
           <li key={index} className="p-2 text-white divide-gray-600">
             <button

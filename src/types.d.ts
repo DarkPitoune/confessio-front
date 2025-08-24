@@ -38,10 +38,43 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/front/api/church/{church_uuid}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Church Details */
+    get: operations["front_api_get_church_details"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** AggregationOut */
+    AggregationOut: {
+      /**
+       * Type
+       * @enum {string}
+       */
+      type: "diocese" | "parish" | "municipality";
+      /** Name */
+      name: string;
+      /** Church Count */
+      church_count: number;
+      /** Centroid Latitude */
+      centroid_latitude: number;
+      /** Centroid Longitude */
+      centroid_longitude: number;
+    };
     /** ChurchOut */
     ChurchOut: {
       /**
@@ -89,11 +122,8 @@ export interface components {
       churches: components["schemas"]["ChurchOut"][];
       /** Websites */
       websites: components["schemas"]["WebsiteOut"][];
-      /**
-       * Has More Results
-       * @description whether the result was truncated due to too many results
-       */
-      has_more_results: boolean;
+      /** Aggregations */
+      aggregations: components["schemas"]["AggregationOut"][];
     };
     /** WebsiteOut */
     WebsiteOut: {
@@ -106,6 +136,8 @@ export interface components {
       name: string;
       /** Events */
       events: components["schemas"]["EventOut"][];
+      /** Has More Events */
+      has_more_events: boolean;
       /** Reports Count */
       reports_count: Record<string, never>[];
     };
@@ -123,6 +155,45 @@ export interface components {
       latitude?: number | null;
       /** Longitude */
       longitude?: number | null;
+    };
+    /** ChurchDetails */
+    ChurchDetails: {
+      /**
+       * Uuid
+       * Format: uuid
+       */
+      uuid: string;
+      /** Name */
+      name: string;
+      /** Latitude */
+      latitude: number;
+      /** Longitude */
+      longitude: number;
+      /** Address */
+      address: string | null;
+      /** Zipcode */
+      zipcode: string | null;
+      /** City */
+      city: string | null;
+      /**
+       * Website Uuid
+       * Format: uuid
+       */
+      website_uuid: string;
+      /** Schedules */
+      schedules: components["schemas"]["ScheduleOut"][];
+    };
+    /** ScheduleOut */
+    ScheduleOut: {
+      /** Explanation */
+      explanation: string;
+      /** Parsing Uuids */
+      parsing_uuids: string[];
+    };
+    /** ErrorSchema */
+    ErrorSchema: {
+      /** Detail */
+      detail: string;
     };
   };
   responses: never;
@@ -181,6 +252,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AutocompleteItem"][];
+        };
+      };
+    };
+  };
+  front_api_get_church_details: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        church_uuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChurchDetails"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorSchema"];
         };
       };
     };

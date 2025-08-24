@@ -1,6 +1,9 @@
+import { selectedChurchAtom, setSelectedChurchAtom } from "@/store/atoms";
 import { components } from "@/types";
-import { useRef, useState } from "react";
+import { useAtom } from "jotai";
+import { useEffect, useRef } from "react";
 import { Sheet, SheetRef } from "react-modal-sheet";
+import { ChurchCard } from "./ChurchCard";
 import "./ModalSheet.css";
 
 export function ModalSheet({
@@ -8,10 +11,13 @@ export function ModalSheet({
 }: {
   searchResults: components["schemas"]["SearchResult"] | undefined;
 }) {
+  const [selectedChurch] = useAtom(selectedChurchAtom);
+  const [, setSelectedChurch] = useAtom(setSelectedChurchAtom);
   const sheetRef = useRef<SheetRef>(null);
-  const [selectedChurch, setSelectedChurch] = useState<
-    components["schemas"]["SearchResult"]["churches"][number] | undefined
-  >(undefined);
+
+  useEffect(() => {
+    if (selectedChurch) sheetRef.current?.snapTo(0);
+  }, [selectedChurch]);
 
   return (
     <Sheet
@@ -26,16 +32,7 @@ export function ModalSheet({
         <Sheet.Header />
         <Sheet.Content>
           {selectedChurch ? (
-            <>
-              <div>
-                <h3 className="font-medium text-gray-900 mb-2">
-                  {selectedChurch.name}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {selectedChurch.address}
-                </p>
-              </div>
-            </>
+            <ChurchCard church={selectedChurch} />
           ) : (
             <>
               <div className="text-white">

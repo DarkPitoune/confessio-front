@@ -28,3 +28,20 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Map marker styles */
+.current-position-marker {
+  background: transparent;
+  border: none;
+}
+
+.current-position-marker div {
+  transition: all 0.2s ease;
+}
+
+.current-position-marker div:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 0 3px #007bff,
+    0 4px 8px rgba(0, 123, 255, 0.3);
+}
