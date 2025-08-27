@@ -1,5 +1,7 @@
+import { selectedChurchAtom } from "@/store/atoms";
 import { components } from "@/types";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
+import { useAtom } from "jotai";
 import L, { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
@@ -10,18 +12,15 @@ const Map = ({
   setMap,
   searchResults,
   currentPosition,
-  setSelectedChurch,
 }: {
   setMap: (map: LeafletMap) => void;
   searchResults: components["schemas"]["SearchResult"] | undefined;
   currentPosition: { latitude: number; longitude: number } | null;
-  setSelectedChurch: (
-    church: components["schemas"]["SearchResult"]["churches"][number],
-  ) => void;
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<{ [key: string]: Marker }>({});
+  const [selectedChurch, setSelectedChurch] = useAtom(selectedChurchAtom);
 
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
@@ -94,7 +93,25 @@ const Map = ({
     }
   }, [searchResults, currentPosition, setSelectedChurch]);
 
-  return <div ref={mapRef} style={{ height: "100%", width: "100%" }} />;
+  // Pan and click on selected church
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      // TODO: This does not really work consistently, to fix before v1
+      if (selectedChurch) {
+        mapInstanceRef.current.setView(
+          [selectedChurch.latitude - 0.01, selectedChurch.longitude],
+          14,
+        );
+        markersRef.current[selectedChurch.uuid]?.openPopup();
+      } else {
+        Object.values(markersRef.current).forEach((marker) =>
+          marker.closePopup(),
+        );
+      }
+    }
+  }, [selectedChurch]);
+
+  return <div ref={mapRef} className="h-full w-full" />;
 };
 
 export default Map;

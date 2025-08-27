@@ -4,10 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import Image from "next/image";
 import Link from "next/link";
-import { Sheet } from "react-modal-sheet";
 
 const ChurchCard = ({
-  church
+  church,
 }: {
   church: components["schemas"]["SearchResult"]["churches"][number];
 }) => {
@@ -17,8 +16,8 @@ const ChurchCard = ({
     queryKey: ["churchDetails", church.uuid],
     queryFn: () =>
       fetch(`https://confessio.fr/front/api/church/${church.uuid}`).then(
-        (res) => res.json()
-      )
+        (res) => res.json(),
+      ),
   });
 
   const [, clearSelectedChurch] = useAtom(clearSelectedChurchAtom);
@@ -57,19 +56,17 @@ const ChurchCard = ({
         <h4 className="text-lg font-semibold text-white">
           {churchDetails.schedules.length > 0 ? "Horaires" : "Aucun horaire"}
         </h4>
-        <Sheet.Scroller>
-          {churchDetails.schedules.length > 0 && (
-            <article className="p-4 rounded-lg bg-white w-full">
-              <ul className="list-disc list-inside">
-                {churchDetails.schedules.map((schedule) => (
-                  <li key={schedule.explanation} className="">
-                    {schedule.explanation}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          )}
-        </Sheet.Scroller>
+        {churchDetails.schedules.length > 0 && (
+          <article className="p-4 rounded-lg bg-white text-black w-full">
+            <ul className="list-disc list-inside">
+              {churchDetails.schedules.map((schedule) => (
+                <li key={schedule.explanation} className="">
+                  {schedule.explanation}
+                </li>
+              ))}
+            </ul>
+          </article>
+        )}
       </div>
     </>
   ) : (

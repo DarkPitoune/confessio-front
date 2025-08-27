@@ -35,9 +35,9 @@ export function ModalSheet({
             <ChurchCard church={selectedChurch} />
           ) : (
             <>
-              <div className="text-white">
-                Horaires de confession proche de vous
-              </div>
+              <h4 className="text-lg font-semibold text-white px-4">
+                Horaires de confession proches de vous
+              </h4>
               <Sheet.Scroller draggableAt="top">
                 <div className="px-6 py-4 space-y-4">
                   {searchResults?.churches?.map((item) => (
