@@ -7,7 +7,7 @@ import { ChurchCard } from "./ChurchCard";
 import "./ModalSheet.css";
 
 export function ModalSheet({
-  searchResults,
+  searchResults
 }: {
   searchResults: components["schemas"]["SearchResult"] | undefined;
 }) {
@@ -27,6 +27,7 @@ export function ModalSheet({
       initialSnap={1}
       dragCloseThreshold={1}
       onClose={() => sheetRef.current?.snapTo(1)}
+      style={{ zIndex: 30 }}
     >
       <Sheet.Container>
         <Sheet.Header />
@@ -35,9 +36,13 @@ export function ModalSheet({
             <ChurchCard church={selectedChurch} />
           ) : (
             <>
-              <h4 className="text-lg font-semibold text-white px-4">
-                Horaires de confession proches de vous
-              </h4>
+              <div className="flex flex-col gap-2">
+                <h4 className="text-base font-semibold text-white px-4">
+                  Horaires de confession proches de vous
+                </h4>
+                <input type="date" className="w-full" />
+              </div>
+              <hr className="text-gray-500" />
               <Sheet.Scroller draggableAt="top">
                 <div className="px-6 py-4 space-y-4">
                   {searchResults?.churches?.map((item) => (

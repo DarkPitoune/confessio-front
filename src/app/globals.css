@@ -2,6 +2,7 @@
 
 @theme {
   --color-deepblue: #242e4c;
+  --color-lightblue: #005cdf;
 }
 
 :root {
@@ -44,4 +45,45 @@ body {
   box-shadow:
     0 0 0 3px #007bff,
     0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.aggregation-marker-count {
+  background-color: var(--color-deepblue);
+  height: 25px;
+  width: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  position: relative;
+}
+
+.aggregation-marker-count:hover {
+  scale: 1.1;
+}
+
+.church-marker {
+  background-color: var(--color-lightblue);
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.church-marker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 9px solid var(--color-lightblue);
 }

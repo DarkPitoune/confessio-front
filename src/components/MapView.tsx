@@ -109,7 +109,7 @@ export default function MapView() {
       />
       <button
         onClick={handleCenterOnMe}
-        className="absolute right-4 size-12 z-80 bg-deepblue rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+        className="absolute right-4 size-12 z-20 bg-deepblue rounded-full flex items-center justify-center cursor-pointer shadow-lg"
         style={{ bottom: "160px" }}
       >
         <Image src="/target.svg" alt="Center on me" width={32} height={32} />

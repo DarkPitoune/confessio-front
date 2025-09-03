@@ -8,6 +8,29 @@ import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
 
+const getAggregationUuid = (
+  aggregation: components["schemas"]["SearchResult"]["aggregations"][number],
+) => {
+  const truncatedLatitude =
+    Math.trunc(aggregation.centroid_latitude * 10000) / 10000;
+  const truncatedLongitude =
+    Math.trunc(aggregation.centroid_longitude * 10000) / 10000;
+  return `${truncatedLatitude}-${truncatedLongitude}`;
+};
+
+const getZoomLevel = (
+  aggregation: components["schemas"]["SearchResult"]["aggregations"][number],
+) => {
+  console.log("aggregation", aggregation.type, aggregation.name);
+  switch (aggregation.type) {
+    case "diocese":
+      return 12;
+    case "municipality":
+      return 15;
+    case "parish":
+      return 14;
+  }
+};
 const Map = ({
   setMap,
   searchResults,
@@ -19,7 +42,8 @@ const Map = ({
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
-  const markersRef = useRef<{ [key: string]: Marker }>({});
+  const churchMarkersRef = useRef<{ [key: string]: Marker }>({});
+  const aggregationMarkersRef = useRef<{ [key: string]: Marker }>({});
   const [selectedChurch, setSelectedChurch] = useAtom(selectedChurchAtom);
 
   useEffect(() => {
@@ -37,7 +61,7 @@ const Map = ({
         apiKey: "IvfJd8JdfCAMSmSC08kr",
       }).addTo(map);
     }
-  }, []);
+  }, [setMap]);
 
   useEffect(() => {
     // adapt map position to current position
@@ -49,21 +73,30 @@ const Map = ({
     }
   }, [currentPosition]);
 
+  // region Churches Markers
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // find markers that are not in the new search results
-    for (const [key, marker] of Object.entries(markersRef.current)) {
+    // find markers that are not in the list of churches
+    for (const [key, marker] of Object.entries(churchMarkersRef.current)) {
       if (!searchResults?.churches.find((church) => church.uuid === key)) {
         marker.remove();
-        delete markersRef.current[key];
+        delete churchMarkersRef.current[key];
       }
     }
 
     // Add markers for new churches
     searchResults?.churches.forEach((church) => {
-      if (!markersRef.current[church.uuid]) {
-        const marker = L.marker([church.latitude, church.longitude])
+      if (!churchMarkersRef.current[church.uuid]) {
+        const marker = L.marker([church.latitude, church.longitude], {
+          // todo this is incorrectly centered
+          icon: L.divIcon({
+            className: "",
+            html: `<div class="church-marker">${church.name.slice(0, 2)}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 5],
+          }),
+        })
           .addTo(mapInstanceRef.current!)
           .bindPopup(
             `<strong>${church.name}</strong><br/>${church.address || ""}`,
@@ -71,7 +104,7 @@ const Map = ({
           .on("click", () => {
             setSelectedChurch(church);
           });
-        markersRef.current[church.uuid] = marker;
+        churchMarkersRef.current[church.uuid] = marker;
       }
     });
 
@@ -89,7 +122,8 @@ const Map = ({
         },
       ).addTo(mapInstanceRef.current!);
 
-      markersRef.current["current-position-marker"] = currentPositionMarker;
+      churchMarkersRef.current["current-position-marker"] =
+        currentPositionMarker;
     }
   }, [searchResults, currentPosition, setSelectedChurch]);
 
@@ -98,18 +132,66 @@ const Map = ({
     if (mapInstanceRef.current) {
       // TODO: This does not really work consistently, to fix before v1
       if (selectedChurch) {
+        const zoomLevel = Math.max(mapInstanceRef.current.getZoom(), 14);
         mapInstanceRef.current.setView(
           [selectedChurch.latitude - 0.01, selectedChurch.longitude],
-          14,
+          zoomLevel,
         );
-        markersRef.current[selectedChurch.uuid]?.openPopup();
+        churchMarkersRef.current[selectedChurch.uuid]?.openPopup();
       } else {
-        Object.values(markersRef.current).forEach((marker) =>
+        Object.values(churchMarkersRef.current).forEach((marker) =>
           marker.closePopup(),
         );
       }
     }
   }, [selectedChurch]);
+
+  // endregion
+
+  // region Aggregation Markers
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    // find markers that are not in the list of aggregations
+    for (const [key, marker] of Object.entries(aggregationMarkersRef.current)) {
+      if (
+        !searchResults?.aggregations.find(
+          (aggregation) => getAggregationUuid(aggregation) === key,
+        )
+      ) {
+        marker.remove();
+        delete aggregationMarkersRef.current[key];
+      }
+    }
+
+    // Add Aggregation markers for new aggregations
+    searchResults?.aggregations.forEach((aggregation) => {
+      const uuid = getAggregationUuid(aggregation);
+      if (!aggregationMarkersRef.current[uuid]) {
+        const marker = L.marker(
+          [aggregation.centroid_latitude, aggregation.centroid_longitude],
+          {
+            icon: L.divIcon({
+              className: "",
+              html: `<div class="aggregation-marker-count">${aggregation.church_count}</div>`,
+              iconSize: [25, 25],
+              iconAnchor: [10, 10],
+            }),
+          },
+        )
+          .addTo(mapInstanceRef.current!)
+          .on("click", () => {
+            mapInstanceRef.current?.setView(
+              [aggregation.centroid_latitude, aggregation.centroid_longitude],
+              getZoomLevel(aggregation),
+            );
+          });
+        aggregationMarkersRef.current[uuid] = marker;
+      }
+    });
+  }, [searchResults]);
+
+  // endregion
 
   return <div ref={mapRef} className="h-full w-full" />;
 };
