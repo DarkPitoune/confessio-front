@@ -3,7 +3,7 @@ function ModalSheetContainerServer({
 }: {
   children: React.ReactNode;
 }) {
-  return <div id="testId">{children}</div>;
+  return <div>{children}</div>;
 }
 
 export default ModalSheetContainerServer;

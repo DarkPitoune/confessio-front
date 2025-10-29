@@ -5,7 +5,6 @@ import ModalSheetContainerServer from "./ModalSheetContainerServer";
 const ModalSheetContainer = ({ children }: { children: ReactNode }) => {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
-    console.log("mount");
     setIsMounted(true);
   }, []);
   if (isMounted)

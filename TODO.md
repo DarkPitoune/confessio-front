@@ -1,0 +1,1 @@
+- parler de query cancellation. est ce une bonne alternative à du debouncing?

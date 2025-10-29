@@ -7,9 +7,10 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { SearchInput } from "./SearchInput";
+import { AggregatedSearchResults, fetchChurchesWithWebsites } from "@/utils";
 import ModalSheet from "./ModalSheet";
 
-const Map = dynamic(() => import("./Map"), {
+const Map = dynamic(() => import("./Map/Map"), {
   loading: () => (
     <div className="h-screen w-screen flex flex-col gap-4 items-center justify-center">
       <Image
@@ -57,14 +58,18 @@ export default function MapView() {
 
   // TODO: debounce this to avoid concurrent requests
   const { data: searchResults, isFetching: isSearchResultsFetching } = useQuery<
-    components["schemas"]["SearchResult"]
+    AggregatedSearchResults | null
   >({
     queryKey: ["churches", bounds],
-    queryFn: async () => {
+    queryFn: async ({signal}) => {
       if (!bounds) return Promise.resolve(null);
-      return fetch(
-        `https://confessio.fr/front/api/search?min_lat=${bounds?.getSouth()}&min_lng=${bounds?.getWest()}&max_lat=${bounds?.getNorth()}&max_lng=${bounds?.getEast()}`,
-      ).then((res) => res.json());
+      return fetchChurchesWithWebsites({
+        min_lat: bounds.getSouth(),
+        max_lat: bounds.getNorth(),
+        min_lng: bounds.getEast(),
+        max_lng: bounds.getWest(),
+        signal
+      });
     },
     staleTime: 200,
     placeholderData: (previousdata) => previousdata, // persist previous data to avoid flickering
@@ -116,8 +121,8 @@ export default function MapView() {
           searchResults={searchResults}
           currentPosition={currentPosition}
         />
+        <ModalSheet searchResults={searchResults} />
       </div>
-      <ModalSheet searchResults={searchResults} />
-    </>
+      </>
   );
 }

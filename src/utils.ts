@@ -22,12 +22,14 @@ export const fetchChurchesWithWebsites = async ({
   max_lat,
   max_lng,
   date_filter,
+  signal,
 }: {
   min_lat: number;
   min_lng: number;
   max_lat: number;
   max_lng: number;
   date_filter?: string;
+  signal: AbortSignal;
 }): Promise<AggregatedSearchResults> => {
   const searchParams = new URLSearchParams({
     min_lat: min_lat.toString(),
@@ -42,6 +44,7 @@ export const fetchChurchesWithWebsites = async ({
 
   const response: components["schemas"]["SearchResult"] = await fetchApi(
     `/search?${searchParams.toString()}`,
+    { signal },
   );
   const churches = response.churches.map((church) => {
     const website = response.websites.find(
@@ -84,3 +87,9 @@ export const fetchChurchesWithWebsites = async ({
     aggregations: response.aggregations,
   };
 };
+
+/**
+ * Removes the "Église " at the beginning of the name, for readability
+ */
+export const cleanupChurchName = (churchName: string) =>
+  churchName.replace("Église ", "");

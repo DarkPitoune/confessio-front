@@ -1,16 +1,16 @@
 import { selectedChurchAtom, setSelectedChurchAtom } from "@/store/atoms";
-import { components } from "@/types";
 import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
-import { Sheet, SheetRef } from "react-modal-sheet";
+import { SheetRef } from "react-modal-sheet";
 import { ChurchCard } from "./ChurchCard";
-import "./ModalSheet.css";
 import ModalSheetContainer from "./ModalSheet/ModalSheetContainer";
+import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
+import { AggregatedSearchResults } from "@/utils";
 
 function ModalSheet({
   searchResults,
 }: {
-  searchResults: components["schemas"]["SearchResult"] | undefined;
+  searchResults:AggregatedSearchResults | null|undefined 
 }) {
   const [selectedChurch] = useAtom(selectedChurchAtom);
   const [, setSelectedChurch] = useAtom(setSelectedChurchAtom);
@@ -22,7 +22,6 @@ function ModalSheet({
 
   return (
     <ModalSheetContainer>
-      {" "}
       {selectedChurch ? (
         <ChurchCard church={selectedChurch} />
       ) : (
@@ -34,7 +33,7 @@ function ModalSheet({
             <input type="date" className="w-full" />
           </div>
           <hr className="text-gray-500" />
-          {/*      <Sheet.Scroller draggableAt="top">*/}
+          <ModalSheetScroller draggableAt="top">
           <div className="px-6 py-4 space-y-4">
             {searchResults?.churches?.map((item) => (
               <button
@@ -47,7 +46,7 @@ function ModalSheet({
               </button>
             ))}
           </div>
-          {/*   </Sheet.Scroller> */}
+        </ModalSheetScroller>
         </>
       )}
     </ModalSheetContainer>

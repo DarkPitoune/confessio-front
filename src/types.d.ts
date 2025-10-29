@@ -4,287 +4,295 @@
  */
 
 export interface paths {
-  "/front/api/search": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/front/api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Api Search */
+        get: operations["front_api_api_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Api Search */
-    get: operations["front_api_api_search"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/front/api/autocomplete": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/front/api/autocomplete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Autocomplete */
+        get: operations["front_api_autocomplete"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Autocomplete */
-    get: operations["front_api_autocomplete"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/front/api/church/{church_uuid}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/front/api/church/{church_uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Church Details */
+        get: operations["front_api_get_church_details"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Church Details */
-    get: operations["front_api_get_church_details"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** AggregationOut */
-    AggregationOut: {
-      /**
-       * Type
-       * @enum {string}
-       */
-      type: "diocese" | "parish" | "municipality";
-      /** Name */
-      name: string;
-      /** Church Count */
-      church_count: number;
-      /** Centroid Latitude */
-      centroid_latitude: number;
-      /** Centroid Longitude */
-      centroid_longitude: number;
+    schemas: {
+        /** AggregationOut */
+        AggregationOut: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "diocese" | "parish" | "municipality";
+            /** Name */
+            name: string;
+            /** Church Count */
+            church_count: number;
+            /** Centroid Latitude */
+            centroid_latitude: number;
+            /** Centroid Longitude */
+            centroid_longitude: number;
+            /** Min Latitude */
+            min_latitude: number;
+            /** Max Latitude */
+            max_latitude: number;
+            /** Min Longitude */
+            min_longitude: number;
+            /** Max Longitude */
+            max_longitude: number;
+        };
+        /** ChurchOut */
+        ChurchOut: {
+            /**
+             * Uuid
+             * Format: uuid
+             */
+            uuid: string;
+            /** Name */
+            name: string;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+            /** Address */
+            address: string | null;
+            /** Zipcode */
+            zipcode: string | null;
+            /** City */
+            city: string | null;
+            /**
+             * Website Uuid
+             * Format: uuid
+             */
+            website_uuid: string;
+        };
+        /** EventOut */
+        EventOut: {
+            /** Church Uuid */
+            church_uuid: string | null;
+            /** Is Church Explicitly Other */
+            is_church_explicitly_other: boolean;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /** End */
+            end: string | null;
+            /** Source Has Been Moderated */
+            source_has_been_moderated: boolean;
+        };
+        /** SearchResult */
+        SearchResult: {
+            /** Churches */
+            churches: components["schemas"]["ChurchOut"][];
+            /** Websites */
+            websites: components["schemas"]["WebsiteOut"][];
+            /** Aggregations */
+            aggregations: components["schemas"]["AggregationOut"][];
+        };
+        /** WebsiteOut */
+        WebsiteOut: {
+            /**
+             * Uuid
+             * Format: uuid
+             */
+            uuid: string;
+            /** Name */
+            name: string;
+            /** Events */
+            events: components["schemas"]["EventOut"][];
+            /** Has More Events */
+            has_more_events: boolean;
+            /** Reports Count */
+            reports_count: Record<string, never>[];
+        };
+        /** AutocompleteItem */
+        AutocompleteItem: {
+            /** Type */
+            type: string;
+            /** Name */
+            name: string;
+            /** Context */
+            context: string | null;
+            /** Url */
+            url: string;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+        };
+        /** ChurchDetails */
+        ChurchDetails: {
+            /**
+             * Uuid
+             * Format: uuid
+             */
+            uuid: string;
+            /** Name */
+            name: string;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+            /** Address */
+            address: string | null;
+            /** Zipcode */
+            zipcode: string | null;
+            /** City */
+            city: string | null;
+            /**
+             * Website Uuid
+             * Format: uuid
+             */
+            website_uuid: string;
+            /** Schedules */
+            schedules: components["schemas"]["ScheduleOut"][];
+        };
+        /** ScheduleOut */
+        ScheduleOut: {
+            /** Explanation */
+            explanation: string;
+            /** Parsing Uuids */
+            parsing_uuids: string[];
+        };
+        /** ErrorSchema */
+        ErrorSchema: {
+            /** Detail */
+            detail: string;
+        };
     };
-    /** ChurchOut */
-    ChurchOut: {
-      /**
-       * Uuid
-       * Format: uuid
-       */
-      uuid: string;
-      /** Name */
-      name: string;
-      /** Latitude */
-      latitude: number;
-      /** Longitude */
-      longitude: number;
-      /** Address */
-      address: string | null;
-      /** Zipcode */
-      zipcode: string | null;
-      /** City */
-      city: string | null;
-      /**
-       * Website Uuid
-       * Format: uuid
-       */
-      website_uuid: string;
-    };
-    /** EventOut */
-    EventOut: {
-      /** Church Uuid */
-      church_uuid: string | null;
-      /** Is Church Explicitly Other */
-      is_church_explicitly_other: boolean;
-      /**
-       * Start
-       * Format: date-time
-       */
-      start: string;
-      /** End */
-      end: string | null;
-      /** Source Has Been Moderated */
-      source_has_been_moderated: boolean;
-    };
-    /** SearchResult */
-    SearchResult: {
-      /** Churches */
-      churches: components["schemas"]["ChurchOut"][];
-      /** Websites */
-      websites: components["schemas"]["WebsiteOut"][];
-      /** Aggregations */
-      aggregations: components["schemas"]["AggregationOut"][];
-    };
-    /** WebsiteOut */
-    WebsiteOut: {
-      /**
-       * Uuid
-       * Format: uuid
-       */
-      uuid: string;
-      /** Name */
-      name: string;
-      /** Events */
-      events: components["schemas"]["EventOut"][];
-      /** Has More Events */
-      has_more_events: boolean;
-      /** Reports Count */
-      reports_count: Record<string, never>[];
-    };
-    /** AutocompleteItem */
-    AutocompleteItem: {
-      /** Type */
-      type: string;
-      /** Name */
-      name: string;
-      /** Context */
-      context: string | null;
-      /** Url */
-      url: string;
-      /** Latitude */
-      latitude?: number | null;
-      /** Longitude */
-      longitude?: number | null;
-    };
-    /** ChurchDetails */
-    ChurchDetails: {
-      /**
-       * Uuid
-       * Format: uuid
-       */
-      uuid: string;
-      /** Name */
-      name: string;
-      /** Latitude */
-      latitude: number;
-      /** Longitude */
-      longitude: number;
-      /** Address */
-      address: string | null;
-      /** Zipcode */
-      zipcode: string | null;
-      /** City */
-      city: string | null;
-      /**
-       * Website Uuid
-       * Format: uuid
-       */
-      website_uuid: string;
-      /** Schedules */
-      schedules: components["schemas"]["ScheduleOut"][];
-    };
-    /** ScheduleOut */
-    ScheduleOut: {
-      /** Explanation */
-      explanation: string;
-      /** Parsing Uuids */
-      parsing_uuids: string[];
-    };
-    /** ErrorSchema */
-    ErrorSchema: {
-      /** Detail */
-      detail: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  front_api_api_search: {
-    parameters: {
-      query?: {
-        latitude?: number | null;
-        longitude?: number | null;
-        min_lat?: number | null;
-        min_lng?: number | null;
-        max_lat?: number | null;
-        max_lng?: number | null;
-        date_filter?: string | null;
-        hour_min?: number;
-        hour_max?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    front_api_api_search: {
+        parameters: {
+            query?: {
+                latitude?: number | null;
+                longitude?: number | null;
+                min_lat?: number | null;
+                min_lng?: number | null;
+                max_lat?: number | null;
+                max_lng?: number | null;
+                date_filter?: string | null;
+                hour_min?: number;
+                hour_max?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResult"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    front_api_autocomplete: {
+        parameters: {
+            query?: {
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SearchResult"];
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutocompleteItem"][];
+                };
+            };
         };
-      };
     };
-  };
-  front_api_autocomplete: {
-    parameters: {
-      query?: {
-        query?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    front_api_get_church_details: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                church_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChurchDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorSchema"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AutocompleteItem"][];
-        };
-      };
-    };
-  };
-  front_api_get_church_details: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        church_uuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ChurchDetails"];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ErrorSchema"];
-        };
-      };
-    };
-  };
 }

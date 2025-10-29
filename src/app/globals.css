@@ -65,6 +65,11 @@ body {
   scale: 1.1;
 }
 
+.empty-church-marker {
+  background-color: #97beff !important; /* override leaflet default */
+  border-radius: 5px;
+}
+
 .church-marker {
   background-color: var(--color-lightblue);
   height: 30px;

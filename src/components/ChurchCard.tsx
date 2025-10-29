@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import Image from "next/image";
 import Link from "next/link";
+import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 
 const ChurchCard = ({
   church,
@@ -22,13 +23,11 @@ const ChurchCard = ({
 
   const [, clearSelectedChurch] = useAtom(clearSelectedChurchAtom);
 
-  return churchDetails ? (
+  return (
     <>
       <div className="px-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-2xl text-white">
-            {churchDetails.name}
-          </h3>
+          <h3 className="font-semibold text-2xl text-white">{church.name}</h3>
           <button
             onClick={() => clearSelectedChurch()}
             className="rounded-full bg-white/10 p-1 shrink-0"
@@ -43,34 +42,36 @@ const ChurchCard = ({
           </button>
         </div>
         <Link
-          href={`https://www.google.com/maps/dir/?api=1&destination=${churchDetails.latitude},${churchDetails.longitude}`}
+          href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
           className="text-sm text-gray-300 italic font-light leading-none"
         >
-          {churchDetails.address}
+          {church.address}
           <br />
-          {churchDetails.city} - {churchDetails.zipcode}
+          {church.city} - {church.zipcode}
         </Link>
       </div>
       <hr className="text-gray-500 my-4" />
-      <div className="px-4 flex flex-col gap-4 items-center">
-        <h4 className="text-lg font-semibold text-white">
-          {churchDetails.schedules.length > 0 ? "Horaires" : "Aucun horaire"}
-        </h4>
-        {churchDetails.schedules.length > 0 && (
-          <article className="p-4 rounded-lg bg-white text-black w-full">
-            <ul className="list-disc list-inside">
-              {churchDetails.schedules.map((schedule) => (
-                <li key={schedule.explanation} className="">
-                  {schedule.explanation}
-                </li>
-              ))}
-            </ul>
-          </article>
-        )}
-      </div>
+      <ModalSheetScroller draggableAt="top">
+        <div className="px-4 flex flex-col gap-4 items-center">
+          <h4 className="text-lg font-semibold text-white">
+            {churchDetails && churchDetails.schedules.length > 0
+              ? "Horaires"
+              : "Aucun horaire"}
+          </h4>
+          {churchDetails && churchDetails.schedules.length > 0 && (
+            <article className="p-4 rounded-lg bg-white text-black w-full">
+              <ul className="list-disc list-inside">
+                {churchDetails.schedules.map((schedule) => (
+                  <li key={schedule.explanation} className="">
+                    {schedule.explanation}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          )}
+        </div>
+      </ModalSheetScroller>
     </>
-  ) : (
-    <div>Chargement...</div>
   );
 };
 
