@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { SearchInput } from "./SearchInput";
+import ModalSheet from "./ModalSheet";
 
 const Map = dynamic(() => import("./Map"), {
   loading: () => (
@@ -21,11 +22,6 @@ const Map = dynamic(() => import("./Map"), {
       <p className="text-deepblue font-medium">Chargement...</p>
     </div>
   ),
-  ssr: false,
-});
-const ModalSheet = dynamic(() => import("./ModalSheet"), {
-  // this one's a shame, we'll need to display values from the server
-  loading: () => <p>Loading modal sheet...</p>,
   ssr: false,
 });
 
