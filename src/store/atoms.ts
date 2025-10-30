@@ -9,6 +9,8 @@ export type SelectedChurch =
 // Atom for the currently selected church
 export const selectedChurchAtom = atom<SelectedChurch>(null);
 
+export const dateFilterAtom = atom<string>('')
+
 // Derived atom for checking if a church is selected
 export const hasSelectedChurchAtom = atom(
   (get) => get(selectedChurchAtom) !== null,
@@ -22,12 +24,12 @@ export const selectedChurchUuidAtom = atom(
 // Helper function to set the selected church
 export const setSelectedChurchAtom = atom(
   null,
-  (get, set, church: SelectedChurch) => {
+  (_get, set, church: SelectedChurch) => {
     set(selectedChurchAtom, church);
   },
 );
 
 // Helper function to clear the selected church
-export const clearSelectedChurchAtom = atom(null, (get, set) => {
+export const clearSelectedChurchAtom = atom(null, (_get, set) => {
   set(selectedChurchAtom, null);
 });

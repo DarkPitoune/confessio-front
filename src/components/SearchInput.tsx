@@ -2,8 +2,10 @@ import { components } from "@/types";
 import clsx from "clsx";
 import { Map } from "leaflet";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { ChangeEvent, useCallback, useRef, useState } from "react";
 import { NavigationModal } from "./NavigationModal";
+import { useSetAtom } from "jotai";
+import { selectedChurchAtom } from "@/store/atoms";
 
 export const SearchInput = ({
   map,
@@ -19,6 +21,7 @@ export const SearchInput = ({
   setSearchQuery: (query: string) => void;
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const setSelectedChurch = useSetAtom(selectedChurchAtom);
   const [isNavigationModalOpen, setIsNavigationModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const onClick = (item: components["schemas"]["AutocompleteItem"]) => () => {
@@ -28,6 +31,13 @@ export const SearchInput = ({
       setSearchQuery(item.name);
     }
   };
+  const onInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(e.target.value);
+      setSelectedChurch(null);
+    },
+    [setSearchQuery, setSelectedChurch],
+  );
 
   return (
     <>
@@ -53,7 +63,7 @@ export const SearchInput = ({
             type="text"
             placeholder="Chercher une église ou une ville"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={onInputChange}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className="outline-none flex-1"

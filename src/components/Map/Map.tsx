@@ -146,7 +146,10 @@ const Map = ({
     searchResults?.aggregations.forEach((aggregation) => {
       const uuid = getAggregationUuid(aggregation);
       if (!aggregationMarkersRef.current[uuid]) {
-        const marker = addAggregationMarker(mapInstanceRef.current!, aggregation)
+        const marker = addAggregationMarker(
+          mapInstanceRef.current!,
+          aggregation,
+        );
         aggregationMarkersRef.current[uuid] = marker;
       }
     });

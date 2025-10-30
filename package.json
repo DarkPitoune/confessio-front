@@ -23,7 +23,8 @@
     "react-bottom-sheet": "^1.1.1",
     "react-dom": "^19.0.0",
     "react-leaflet": "^5.0.0",
-    "react-modal-sheet": "^4.4.0"
+    "react-modal-sheet": "^4.4.0",
+    "use-debounce": "^10.0.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

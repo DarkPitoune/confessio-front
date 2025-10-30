@@ -93,3 +93,22 @@ export const fetchChurchesWithWebsites = async ({
  */
 export const cleanupChurchName = (churchName: string) =>
   churchName.replace("Église ", "");
+
+export const getFrenchTimeString = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toTimeString().split(":00 ")[0]?.replace(":", "h");
+};
+
+/**
+ * Creates a nice string to better describe confession times
+ */
+export const getConfessionTimeString = ({
+  start,
+  end,
+}: {
+  start: string;
+  end: string | null;
+}) =>
+  end === null
+    ? `à ${getFrenchTimeString(start)}`
+    : `de ${getFrenchTimeString(start)} à ${getFrenchTimeString(end)}`;

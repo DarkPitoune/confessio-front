@@ -6,9 +6,12 @@ import { LatLngBounds, Map as LeafletMap } from "leaflet";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { SearchInput } from "./SearchInput";
 import { AggregatedSearchResults, fetchChurchesWithWebsites } from "@/utils";
 import ModalSheet from "./ModalSheet";
+import { useAtomValue } from "jotai";
+import { dateFilterAtom } from "@/store/atoms";
 
 const Map = dynamic(() => import("./Map/Map"), {
   loading: () => (
@@ -30,19 +33,14 @@ export default function MapView() {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 100);
+  const [debouncedBounds] = useDebounce(bounds, 500);
 
   const [currentPosition, setCurrentPosition] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [searchQuery]);
 
   const { data, isLoading } = useQuery<
     components["schemas"]["AutocompleteItem"][]
@@ -55,25 +53,24 @@ export default function MapView() {
       ).then((res) => res.json());
     },
   });
-
-  // TODO: debounce this to avoid concurrent requests
-  const { data: searchResults, isFetching: isSearchResultsFetching } = useQuery<
-    AggregatedSearchResults | null
-  >({
-    queryKey: ["churches", bounds],
-    queryFn: async ({signal}) => {
-      if (!bounds) return Promise.resolve(null);
-      return fetchChurchesWithWebsites({
-        min_lat: bounds.getSouth(),
-        max_lat: bounds.getNorth(),
-        min_lng: bounds.getEast(),
-        max_lng: bounds.getWest(),
-        signal
-      });
-    },
-    staleTime: 200,
-    placeholderData: (previousdata) => previousdata, // persist previous data to avoid flickering
-  });
+  const dateFilterValue = useAtomValue(dateFilterAtom);
+  const { data: searchResults, isFetching: isSearchResultsFetching } =
+    useQuery<AggregatedSearchResults | null>({
+      queryKey: ["churches", debouncedBounds, dateFilterValue],
+      queryFn: async ({ signal }) => {
+        if (!debouncedBounds) return Promise.resolve(null);
+        return fetchChurchesWithWebsites({
+          min_lat: debouncedBounds.getSouth(),
+          max_lat: debouncedBounds.getNorth(),
+          min_lng: debouncedBounds.getEast(),
+          max_lng: debouncedBounds.getWest(),
+          date_filter: dateFilterValue,
+          signal,
+        });
+      },
+      staleTime: 200,
+      placeholderData: (previousdata) => previousdata, // persist previous data to avoid flickering
+    });
 
   useEffect(() => {
     const moveEndHandler = () => {
@@ -123,6 +120,6 @@ export default function MapView() {
         />
         <ModalSheet searchResults={searchResults} />
       </div>
-      </>
+    </>
   );
 }

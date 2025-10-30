@@ -1,4 +1,4 @@
-import { AggregatedSearchResults, cleanupChurchName } from "@/utils";
+import { AggregatedSearchResults, cleanupChurchName, getConfessionTimeString, getFrenchTimeString } from "@/utils";
 import L, { Map } from "leaflet";
 
 export const addChurchMarker = (
@@ -23,19 +23,18 @@ export const addChurchMarker = (
     return emptyChurchMarker;
   }
 
-  const firstEventStart = new Date(firstDayFirstEvent.start);
   const marker = L.marker([church.latitude, church.longitude], {
     icon: L.divIcon({
       className: "", // needed to remove the default leaflet class
-      html: `<div class="church-marker">${firstEventStart.toTimeString().split(":00 ")[0]?.replace(":", "h")}</div>`,
-      iconSize: [30, 30],
-      popupAnchor: [0, -30], // from the iconAnchor, up the entire height
-      iconAnchor: [15, 30], // from the top left, half the width and the entire height
+      html: `<div class="church-marker">${getFrenchTimeString(firstDayFirstEvent.start)}</div>`,
+      iconSize: [50, 24],
+      popupAnchor: [0, -24], // from the iconAnchor, up the entire height
+      iconAnchor: [25, 24], // from the top left, half the width and the entire height
     }),
   })
     .addTo(map)
     .bindPopup(
-      `<strong>${cleanupChurchName(church.name)}</strong><br/>${church.address || ""}`,
+      `<strong>${cleanupChurchName(church.name)}</strong><br/>${getConfessionTimeString(firstDayFirstEvent)}`,
     )
     .on("click", () => {
       setSelectedChurch(church);
