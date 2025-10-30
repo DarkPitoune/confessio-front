@@ -28,7 +28,7 @@ function ModalSheet({
       ) : (
         <>
           <div className="flex flex-col gap-2">
-            <h4 className="text-base font-semibold text-white px-4">
+            <h4 className="text-base md:text-lg font-semibold text-white px-4">
               Horaires de confession proches de vous
             </h4>
             <input
@@ -40,7 +40,7 @@ function ModalSheet({
           </div>
           <hr className="text-gray-500" />
           <ModalSheetScroller draggableAt="top">
-            <div className="px-6 py-4 space-y-4">
+            <div className="p-4 space-y-4">
               {searchResults?.churches?.map((church) => (
                 <ChurchTile key={church.uuid} church={church} />
               ))}

@@ -307,7 +307,7 @@ const BottomSheet = ({
         onTouchMove={handleTouchMoveOnContent}
         onTouchEnd={handleTouchEndOnContent}
       >
-        <div className="px-6 py-4 space-y-4">
+        <div className="p-4 space-y-4">
           {searchResults?.churches?.map((item) => (
             <div
               key={item.uuid}
