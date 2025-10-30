@@ -8,7 +8,11 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { SearchInput } from "./SearchInput";
-import { AggregatedSearchResults, fetchChurchesWithWebsites } from "@/utils";
+import {
+  AggregatedSearchResults,
+  fetchApi,
+  fetchChurchesWithWebsites,
+} from "@/utils";
 import ModalSheet from "./ModalSheet";
 import { useAtomValue } from "jotai";
 import { dateFilterAtom } from "@/store/atoms";
@@ -48,9 +52,7 @@ export default function MapView() {
     queryKey: ["mapData", debouncedSearchQuery],
     queryFn: async () => {
       if (debouncedSearchQuery.length === 0) return Promise.resolve([]);
-      return fetch(
-        `https://confessio.fr/front/api/autocomplete?query=${debouncedSearchQuery}`,
-      ).then((res) => res.json());
+      return fetchApi(`/autocomplete?query=${debouncedSearchQuery}`);
     },
   });
   const dateFilterValue = useAtomValue(dateFilterAtom);
@@ -107,8 +109,7 @@ export default function MapView() {
       />
       <button
         onClick={handleCenterOnMe}
-        className="absolute right-4 size-12 z-20 bg-deepblue rounded-full flex items-center justify-center cursor-pointer shadow-lg"
-        style={{ bottom: "160px" }}
+        className="absolute right-4 bottom-[160px] md:bottom-4 size-12 z-20 bg-deepblue rounded-full flex items-center justify-center cursor-pointer shadow-lg"
       >
         <Image src="/target.svg" alt="Center on me" width={32} height={32} />
       </button>

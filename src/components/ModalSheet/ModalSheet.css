@@ -5,7 +5,8 @@
 
 .react-modal-sheet-container {
   background-color: var(--color-deepblue) !important;
-  border-radius: 16px 16px 0 0 !important;
+  border-radius: 16px !important;
+  overflow: clip;
 }
 
 .react-modal-sheet-header {

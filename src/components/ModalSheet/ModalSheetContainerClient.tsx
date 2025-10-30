@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import { Sheet, SheetRef } from "react-modal-sheet";
-import "./ModalSheet.css";
 
 function ModalSheetContainerClient({
   children,

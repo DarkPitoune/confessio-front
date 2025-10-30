@@ -1,6 +1,6 @@
 import { selectedChurchAtom } from "@/store/atoms";
 import { components } from "@/types";
-import { AggregatedSearchResults } from "@/utils";
+import { AggregatedSearchResults, MAP_TILER_API_KEY } from "@/utils";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import { useAtom } from "jotai";
 import L, { Map as LeafletMap, Marker } from "leaflet";
@@ -47,7 +47,7 @@ const Map = ({
       setMap(map);
 
       new MaptilerLayer({
-        apiKey: "IvfJd8JdfCAMSmSC08kr",
+        apiKey: MAP_TILER_API_KEY || "",
       }).addTo(map);
     }
   }, [setMap]);

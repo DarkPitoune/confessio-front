@@ -5,6 +5,7 @@ import { useAtom } from "jotai";
 import Image from "next/image";
 import Link from "next/link";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
+import { fetchApi } from "@/utils";
 
 const ChurchCard = ({
   church,
@@ -15,10 +16,7 @@ const ChurchCard = ({
     components["schemas"]["ChurchDetails"]
   >({
     queryKey: ["churchDetails", church.uuid],
-    queryFn: () =>
-      fetch(`https://confessio.fr/front/api/church/${church.uuid}`).then(
-        (res) => res.json(),
-      ),
+    queryFn: () => fetchApi(`/church/${church.uuid}`),
   });
 
   const [, clearSelectedChurch] = useAtom(clearSelectedChurchAtom);

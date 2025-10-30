@@ -3,14 +3,20 @@ import ModalSheetScrollerServer from "./ModalSheetScrollerServer";
 import ModalSheetScrollerClient from "./ModalSheetScrollerClient";
 import { SheetScrollerProps } from "react-modal-sheet";
 
-const ModalSheetScroller = ({ children, ...props }: { children: ReactNode } & SheetScrollerProps) => {
+const ModalSheetScroller = ({
+  children,
+  ...props
+}: { children: ReactNode } & SheetScrollerProps) => {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
-    setIsMounted(true);
+    if (window.visualViewport && window.visualViewport.width < 768)
+      setIsMounted(true);
   }, []);
   if (isMounted)
     return <ModalSheetScrollerClient>{children}</ModalSheetScrollerClient>;
-  return <ModalSheetScrollerServer {...props}>{children}</ModalSheetScrollerServer>;
+  return (
+    <ModalSheetScrollerServer {...props}>{children}</ModalSheetScrollerServer>
+  );
 };
 
 export default ModalSheetScroller;

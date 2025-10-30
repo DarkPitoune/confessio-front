@@ -30,6 +30,8 @@ const ChurchTile = ({
   church: AggregatedSearchResults["churches"][number];
 }) => {
   const setSelectedChurch = useSetAtom(setSelectedChurchAtom);
+  const events = church.website?.eventsByDay;
+  if (events === undefined || Object.keys(events).length === 0) return null;
   return (
     <div
       onClick={() => setSelectedChurch(church)}
@@ -39,23 +41,22 @@ const ChurchTile = ({
       <h3 className="font-medium text-gray-900 text-lg">{church.name}</h3>
       <p className="text-sm text-gray-500 italic">{church.address}</p>
       <div className="p-2.5 flex gap-2.5 overflow-x-auto">
-        {Object.entries(church.website?.eventsByDay || []).map(
-          ([day, [event]]) =>
-            event ? (
-              <div key={day} className="flex flex-col gap-1 items-stretch">
-                <span className="text-gray-400 whitespace-nowrap w-16 text-center">
-                  {formatDate(event.start)}
+        {Object.entries(events).map(([day, [event]]) =>
+          event ? (
+            <div key={day} className="flex flex-col gap-1 items-stretch">
+              <span className="text-gray-400 whitespace-nowrap w-16 text-center">
+                {formatDate(event.start)}
+              </span>
+              <div className="px-1 flex flex-col rounded py-0.5 bg-blue-100 items-center">
+                <span className="text-black text-sm">
+                  {formatTime(event.start)}
                 </span>
-                <div className="px-1 flex flex-col rounded py-0.5 bg-blue-100 items-center">
-                  <span className="text-black text-sm">
-                    {formatTime(event.start)}
-                  </span>
-                  <span className="text-black text-sm">
-                    {event.end ? formatTime(event.end) : "?"}
-                  </span>
-                </div>
+                <span className="text-black text-sm">
+                  {event.end ? formatTime(event.end) : "?"}
+                </span>
               </div>
-            ) : null,
+            </div>
+          ) : null,
         )}
       </div>
     </div>

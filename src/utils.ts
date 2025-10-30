@@ -1,6 +1,9 @@
 import { components } from "./types";
 
 const API_URL = "https://confessio.fr/front/api";
+export const MAP_TILER_API_KEY = process.env.NEXT_PUBLIC_MAP_TILER_API_KEY;
+if (MAP_TILER_API_KEY === undefined)
+  console.error("MAP_TILER_API_KEY is undefined");
 
 export const fetchApi = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_URL}${url}`, options);
