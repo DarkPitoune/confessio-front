@@ -50,7 +50,7 @@ const ChurchCard = ({
       </div>
       <hr className="text-gray-500 my-4" />
       <ModalSheetScroller draggableAt="top">
-        <div className="px-4 flex flex-col gap-4 items-center">
+        <div className="px-4 pb-4 flex flex-col gap-4 items-center">
           <h4 className="text-lg font-semibold text-white">
             {churchDetails && churchDetails.schedules.length > 0
               ? "Horaires"
