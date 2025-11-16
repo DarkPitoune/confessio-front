@@ -1,5 +1,7 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,16 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Confessio",
-  description: "Préparez votre prochaine confession !",
-  icons: {
-    icon: "/favicon.svg",
-  },
-};
-
-export const viewport =
-  "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no";
+const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -33,7 +26,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       </body>
     </html>
   );

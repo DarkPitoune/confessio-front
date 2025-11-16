@@ -108,7 +108,6 @@ const Map = ({
   // Pan and click on selected church
   useEffect(() => {
     if (mapInstanceRef.current) {
-      // TODO: This does not really work consistently, to fix before v1
       if (selectedChurch) {
         const zoomLevel = Math.max(mapInstanceRef.current.getZoom(), 14);
         mapInstanceRef.current.setView(

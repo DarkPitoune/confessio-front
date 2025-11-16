@@ -1,6 +1,7 @@
 import { setSelectedChurchAtom } from "@/store/atoms";
 import { AggregatedSearchResults } from "@/utils";
 import { useSetAtom } from "jotai";
+import Link from "next/link";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -33,10 +34,14 @@ const ChurchTile = ({
   const events = church.website?.eventsByDay;
   if (events === undefined || Object.keys(events).length === 0) return null;
   return (
-    <div
-      onClick={() => setSelectedChurch(church)}
+    <Link
+      href={`/church/${church.uuid}`}
+      onNavigate={(event) => {
+        event.preventDefault();
+        setSelectedChurch(church);
+      }}
       key={church.uuid}
-      className="w-full bg-white rounded-2xl p-3"
+      className="w-full bg-white rounded-2xl p-3 block"
     >
       <h3 className="font-medium text-gray-900 text-lg">{church.name}</h3>
       <p className="text-sm text-gray-500 italic">{church.address}</p>
@@ -52,14 +57,18 @@ const ChurchTile = ({
                   {formatTime(event.start)}
                 </span>
                 <span className="text-black text-sm">
-                  {event.end ? formatTime(event.end) : "?"}
+                  {
+                    event.end
+                      ? formatTime(event.end)
+                      : "\u00A0" /* non-breackable space to fill in space */
+                  }
                 </span>
               </div>
             </div>
           ) : null,
         )}
       </div>
-    </div>
+    </Link>
   );
 };
 export default ChurchTile;

@@ -31,12 +31,21 @@ function ModalSheet({
             <h4 className="text-base md:text-lg font-semibold text-white px-4">
               Horaires de confession proches de vous
             </h4>
-            <input
-              type="date"
-              className="w-full"
-              value={dateFilterValue}
-              onChange={({ target }) => setDateFilterValue(target.value)}
-            />
+            <div className="px-4 grid grid-cols-2 pb-2">
+              <label
+                htmlFor="date-filter"
+                className="text-sm font-medium text-gray-300 flex items-center"
+              >
+                Sélectionner une date
+              </label>
+              <input
+                id="date-filter"
+                type="date"
+                className="px-3 py-1 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lightblue focus:border-transparent backdrop-blur-sm"
+                value={dateFilterValue}
+                onChange={({ target }) => setDateFilterValue(target.value)}
+              />
+            </div>
           </div>
           <hr className="text-gray-500" />
           <ModalSheetScroller draggableAt="top">

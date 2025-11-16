@@ -15,7 +15,7 @@ const NavigationModal = ({
       onClick={onClose}
     >
       <div
-        className="rounded-xl py-4 px-8 bg-deepblue gap-4 flex flex-col items-stretch justify-center w-4/5"
+        className="rounded-xl py-4 px-8 bg-deepblue gap-4 flex flex-col items-stretch justify-center w-4/5 max-w-96"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-2 items-center justify-center">
@@ -25,35 +25,35 @@ const NavigationModal = ({
             width={24}
             height={24}
           />
-          <h2 className="font-semibold">Confessio</h2>
+          <h2 className="font-semibold md:text-xl">Confessio</h2>
         </div>
         <div className="flex flex-col gap-0.5 items-center justify-cente text-sm">
           <Link
-            className="py-2 bg-white text-deepblue w-full text-center rounded-t-xl"
+            className="py-2 bg-white text-deepblue w-full text-center rounded-t-xl md:text-lg"
             href="https://confessio.fr/contact"
           >
             Nous contacter
           </Link>
           <Link
-            className="py-2 bg-white text-deepblue w-full text-center"
+            className="py-2 bg-white text-deepblue w-full text-center md:text-lg"
             href="https://confessio.fr/about"
           >
             Qui sommes-nous ?
           </Link>
           <Link
-            className="py-2 bg-white text-deepblue w-full text-center"
+            className="py-2 bg-white text-deepblue w-full text-center md:text-lg"
             href="https://www.leetchi.com/fr/c/confessio--participation-aux-frais-de-serveur-3379251"
           >
             Nous soutenir
           </Link>
           <Link
-            className="py-2 bg-white text-deepblue w-full text-center"
+            className="py-2 bg-white text-deepblue w-full text-center md:text-lg"
             href="https://confessio.fr/api/docs"
           >
             API
           </Link>
           <Link
-            className="py-2 bg-white text-deepblue w-full text-center rounded-b-xl"
+            className="py-2 bg-white text-deepblue w-full text-center rounded-b-xl md:text-lg"
             href="https://confessio.fr/accounts/login/"
           >
             Espace Administrateur

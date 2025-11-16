@@ -12,7 +12,7 @@ const ChurchCard = ({
 }: {
   church: components["schemas"]["SearchResult"]["churches"][number];
 }) => {
-  const { data: churchDetails } = useQuery<
+  const { data: churchDetails, isLoading } = useQuery<
     components["schemas"]["ChurchDetails"]
   >({
     queryKey: ["churchDetails", church.uuid],
@@ -26,8 +26,12 @@ const ChurchCard = ({
       <div className="px-4">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-2xl text-white">{church.name}</h3>
-          <button
-            onClick={() => clearSelectedChurch()}
+          <Link
+            href="/"
+            onNavigate={(event) => {
+              event.preventDefault();
+              clearSelectedChurch();
+            }}
             className="rounded-full bg-white/10 p-1 shrink-0"
           >
             <Image
@@ -37,7 +41,7 @@ const ChurchCard = ({
               height={24}
               className="invert"
             />
-          </button>
+          </Link>
         </div>
         <Link
           href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
@@ -54,7 +58,9 @@ const ChurchCard = ({
           <h4 className="text-lg font-semibold text-white">
             {churchDetails && churchDetails.schedules.length > 0
               ? "Horaires"
-              : "Aucun horaire"}
+              : isLoading
+                ? "Chargement..."
+                : "Aucun horaire"}
           </h4>
           {churchDetails && churchDetails.schedules.length > 0 && (
             <article className="p-4 rounded-lg bg-white text-black w-full">

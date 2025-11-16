@@ -43,13 +43,16 @@ export const SearchInput = ({
     <>
       <div
         className={clsx([
-          "absolute flex flex-col items-stretch justify-start p-4 z-50 md:w-[500px]",
-          isFocused
-            ? "inset-0 bg-deepblue transition-colors"
-            : "inset-x-0 rounded-full bg-transparent",
+          "absolute flex flex-col items-stretch justify-start p-0 z-50 md:w-[468px] rounded-3xl inset-x-4 top-4",
+          { "bg-white bottom-4": isFocused },
         ])}
       >
-        <div className="p-2 border bg-white shadow-lg gap-2 border-gray-300 rounded-full text-black flex">
+        <div
+          className={clsx([
+            "p-2 border bg-white gap-2 border-gray-300 rounded-full text-black flex",
+            { "shadow-lg": !isFocused },
+          ])}
+        >
           <button onClick={() => setIsNavigationModalOpen(true)}>
             <Image
               src="/confessioLogoBlue.svg"
@@ -99,23 +102,27 @@ export const SearchInput = ({
             />
           )}
         </div>
-        <ul className={clsx("min-h-0 overflow-y-auto", { hidden: !isFocused })}>
-          {data.map((item, index) => (
-            <li key={index} className="p-2 text-white divide-gray-600">
-              <button
-                onMouseDown={onClick(item)}
-                className="w-full text-left p-2 rounded-lg transition-colors cursor-pointer flex gap-2 items-center"
-              >
-                <Image
-                  src={item.type === "church" ? "/church.svg" : "/city.svg"}
-                  alt={item.type === "church" ? "Église" : "Ville"}
-                  width={24}
-                  height={24}
-                />
-                <div className="flex flex-col">{item.name}</div>
-              </button>
-            </li>
-          ))}
+        <ul className={clsx("min-h-0 overflow-y-auto bg-white")}>
+          {isFocused &&
+            data.map((item, index) => (
+              <li key={index} className="p-2 text-black divide-gray-600">
+                <button
+                  onMouseDown={onClick(item)}
+                  className="w-full text-left px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center hover:bg-gray-100 gap-2"
+                >
+                  <Image
+                    src={item.type === "church" ? "/church.svg" : "/city.svg"}
+                    alt={item.type === "church" ? "Église" : "Ville"}
+                    width={24}
+                    height={24}
+                  />
+                  <div className="flex flex-col">
+                    <div className="flex flex-col">{item.name}</div>
+                    <div className="text-xs text-gray-500">{item.context}</div>
+                  </div>
+                </button>
+              </li>
+            ))}
         </ul>
       </div>
       <NavigationModal

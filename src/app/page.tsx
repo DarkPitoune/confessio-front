@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import ModalSheet from "@/components/ModalSheet";
 import { SearchInput } from "@/components/SearchInput";
 import { components } from "@/types";
@@ -13,15 +9,14 @@ import {
   fetchApi,
   fetchChurchesWithWebsites,
 } from "@/utils";
-import { useAtomValue } from "jotai";
-import { dateFilterAtom } from "@/store/atoms";
+import { useAtom } from "jotai";
+import { dateFilterAtom, selectedChurchAtom } from "@/store/atoms";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { LatLngBounds, Map as LeafletMap } from "leaflet";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-
-const queryClient = new QueryClient();
+import { useParams, useSearchParams } from "next/navigation";
 
 const Map = dynamic(() => import("../components/Map/Map"), {
   loading: () => (
@@ -43,6 +38,10 @@ function HomePage() {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedChurch, setSelectedChurch] = useAtom(selectedChurchAtom);
+  const [dateFilter, setDateFilter] = useAtom(dateFilterAtom);
+  const params = useParams();
+  const searchParams = useSearchParams();
 
   const [debouncedSearchQuery] = useDebounce(searchQuery, 100);
   const [debouncedBounds] = useDebounce(bounds, 500);
@@ -61,10 +60,10 @@ function HomePage() {
       return fetchApi(`/autocomplete?query=${debouncedSearchQuery}`);
     },
   });
-  const dateFilterValue = useAtomValue(dateFilterAtom);
+
   const { data: searchResults, isFetching: isSearchResultsFetching } =
     useQuery<AggregatedSearchResults | null>({
-      queryKey: ["churches", debouncedBounds, dateFilterValue],
+      queryKey: ["churches", debouncedBounds, dateFilter],
       queryFn: async ({ signal }) => {
         if (!debouncedBounds) return Promise.resolve(null);
         return fetchChurchesWithWebsites({
@@ -72,13 +71,91 @@ function HomePage() {
           max_lat: debouncedBounds.getNorth(),
           min_lng: debouncedBounds.getEast(),
           max_lng: debouncedBounds.getWest(),
-          date_filter: dateFilterValue,
+          date_filter: dateFilter,
           signal,
         });
       },
       staleTime: 200,
-      placeholderData: (previousdata) => previousdata, // persist previous data to avoid flickering
+      placeholderData: (previousdata) => previousdata,
     });
+
+  // Handle direct URL access to church pages
+  const { data: churchFromUrl } = useQuery<
+    components["schemas"]["SearchResult"]["churches"][number]
+  >({
+    queryKey: ["church", params.uuid],
+    queryFn: () => fetchApi(`/church/${params.uuid}`),
+    enabled: !!params.uuid && !selectedChurch,
+  });
+
+  // Initialize date filter from URL (only on mount and navigation)
+  useEffect(() => {
+    const urlDate = searchParams.get("date");
+    if (urlDate && urlDate !== dateFilter) {
+      setDateFilter(urlDate);
+    }
+  }, [searchParams]);
+
+  // Sync date filter to URL
+  useEffect(() => {
+    const currentParams = new URLSearchParams(searchParams.toString());
+    if (dateFilter) {
+      currentParams.set("date", dateFilter);
+    } else {
+      currentParams.delete("date");
+    }
+
+    const newSearch = currentParams.toString();
+    const currentPath = selectedChurch ? `/church/${selectedChurch.uuid}` : "/";
+    const newUrl = newSearch ? `${currentPath}?${newSearch}` : currentPath;
+
+    if (window.location.pathname + window.location.search !== newUrl) {
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [dateFilter, selectedChurch]);
+
+  // Sync URL with atom state
+  useEffect(() => {
+    const currentParams = new URLSearchParams(searchParams.toString());
+    const queryString = currentParams.toString();
+
+    if (selectedChurch) {
+      // Shadow routing - update URL without navigation
+      const newUrl = queryString
+        ? `/church/${selectedChurch.uuid}?${queryString}`
+        : `/church/${selectedChurch.uuid}`;
+      window.history.replaceState(null, "", newUrl);
+    } else {
+      const newUrl = queryString ? `/?${queryString}` : "/";
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [selectedChurch, searchParams]);
+
+  // Handle direct URL access
+  useEffect(() => {
+    if (params.uuid && churchFromUrl && !selectedChurch) {
+      setSelectedChurch(churchFromUrl);
+    }
+  }, [params.uuid, churchFromUrl, selectedChurch, setSelectedChurch]);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopstate = () => {
+      const path = window.location.pathname;
+      if (path === "/") {
+        setSelectedChurch(null);
+      } else if (path.startsWith("/church/")) {
+        const uuid = path.split("/")[2];
+        // Only update if it's different from current
+        if (!selectedChurch || selectedChurch.uuid !== uuid) {
+          // The church will be loaded by the query above
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopstate);
+    return () => window.removeEventListener("popstate", handlePopstate);
+  }, [selectedChurch, setSelectedChurch]);
 
   useEffect(() => {
     const moveEndHandler = () => {
@@ -105,7 +182,7 @@ function HomePage() {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <>
       <SearchInput
         map={map}
         isLoading={isLoading || isSearchResultsFetching}
@@ -127,14 +204,8 @@ function HomePage() {
         />
         <ModalSheet searchResults={searchResults} />
       </div>
-    </QueryClientProvider>
+    </>
   );
 }
 
-export default function Home() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <HomePage />
-    </QueryClientProvider>
-  );
-}
+export default HomePage;
