@@ -51,6 +51,11 @@ function HomePage() {
     longitude: number;
   } | null>(null);
 
+  const [initialCenter, setInitialCenter] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
   const { data, isLoading } = useQuery<
     components["schemas"]["AutocompleteItem"][]
   >({
@@ -87,6 +92,28 @@ function HomePage() {
     queryFn: () => fetchApi(`/church/${params.uuid}`),
     enabled: !!params.uuid && !selectedChurch,
   });
+
+  // Fetch initial geolocation based on IP
+  useEffect(() => {
+    const fetchInitialLocation = async () => {
+      try {
+        const response = await fetch('/api/geolocation');
+        const data = await response.json();
+        setInitialCenter({
+          latitude: data.latitude,
+          longitude: data.longitude,
+        });
+      } catch (error) {
+        console.error('Failed to fetch initial location:', error);
+        setInitialCenter({
+          latitude: 48.8566,
+          longitude: 2.3522,
+        });
+      }
+    };
+
+    fetchInitialLocation();
+  }, []);
 
   // Initialize date filter from URL (only on mount and navigation)
   useEffect(() => {
@@ -201,6 +228,7 @@ function HomePage() {
           setMap={setMap}
           searchResults={searchResults}
           currentPosition={currentPosition}
+          initialCenter={initialCenter}
         />
         <ModalSheet searchResults={searchResults} />
       </div>

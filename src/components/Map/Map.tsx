@@ -24,10 +24,12 @@ const Map = ({
   setMap,
   searchResults,
   currentPosition,
+  initialCenter,
 }: {
   setMap: (map: LeafletMap) => void;
   searchResults: AggregatedSearchResults | null | undefined;
   currentPosition: { latitude: number; longitude: number } | null;
+  initialCenter: { latitude: number; longitude: number } | null;
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
@@ -36,9 +38,9 @@ const Map = ({
   const [selectedChurch, setSelectedChurch] = useAtom(selectedChurchAtom);
 
   useEffect(() => {
-    if (mapRef.current && !mapInstanceRef.current) {
+    if (mapRef.current && !mapInstanceRef.current && initialCenter) {
       const map = L.map(mapRef.current, {
-        center: [48.8566, 2.3522],
+        center: [initialCenter.latitude, initialCenter.longitude],
         zoom: 14,
         zoomControl: false,
       });
@@ -50,7 +52,7 @@ const Map = ({
         apiKey: MAP_TILER_API_KEY || "",
       }).addTo(map);
     }
-  }, [setMap]);
+  }, [setMap, initialCenter]);
 
   useEffect(() => {
     // adapt map position to current position
