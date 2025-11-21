@@ -107,7 +107,7 @@ export const SearchInput = ({
             data.map((item, index) => (
               <li key={index} className="p-2 text-black divide-gray-600">
                 <button
-                  onMouseDown={onClick(item)}
+                  onClick={onClick(item)}
                   className="w-full text-left px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center hover:bg-gray-100 gap-2"
                 >
                   <Image

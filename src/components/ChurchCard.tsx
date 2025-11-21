@@ -71,6 +71,12 @@ const ChurchCard = ({
                   </li>
                 ))}
               </ul>
+              <Link
+                className="text-blue-600 visited:text-purple-800"
+                href={`https://confessio.fr/paroisse/${church.website_uuid}`}
+              >
+                Pour en savoir plus, visitez la page de la paroisse
+              </Link>
             </article>
           )}
         </div>

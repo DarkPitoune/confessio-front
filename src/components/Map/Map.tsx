@@ -110,7 +110,7 @@ const Map = ({
     if (mapInstanceRef.current) {
       if (selectedChurch) {
         const zoomLevel = Math.max(mapInstanceRef.current.getZoom(), 14);
-        mapInstanceRef.current.setView(
+        mapInstanceRef.current.flyTo(
           [selectedChurch.latitude, selectedChurch.longitude],
           zoomLevel,
         );
