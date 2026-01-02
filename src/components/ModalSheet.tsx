@@ -1,6 +1,4 @@
 "use client";
-import { selectedChurchAtom } from "@/store/atoms";
-import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { SheetRef } from "react-modal-sheet";
 import { ChurchCard } from "./ChurchCard";
@@ -14,16 +12,18 @@ import { useSearchResults } from "@/hooks/useSearchResults";
 
 function ModalSheet({
   originalSearchResults,
-  originalSelectedChurch,
+  selectedChurch,
 }: {
   originalSearchResults?: AggregatedSearchResults | null | undefined;
-  originalSelectedChurch?: components["schemas"]["ChurchDetails"];
+  selectedChurch?: components["schemas"]["ChurchDetails"];
 }) {
-  const [churchFromAtom] = useAtom(selectedChurchAtom);
-  const selectedChurch = churchFromAtom || originalSelectedChurch;
   const { date, setDate } = useDateFilter();
   const sheetRef = useRef<SheetRef>(null);
   const { data: searchResults } = useSearchResults();
+  console.log("render MODAL SHEET", {
+    originalSearchResults,
+    selectedChurch,
+  });
 
   const displayedSearchResults = searchResults
     ? searchResults

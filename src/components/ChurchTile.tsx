@@ -1,6 +1,4 @@
-import { setSelectedChurchAtom } from "@/store/atoms";
 import { AggregatedSearchResults } from "@/utils";
-import { useSetAtom } from "jotai";
 import Link from "next/link";
 
 const formatDate = (dateString: string) => {
@@ -30,13 +28,11 @@ const ChurchTile = ({
 }: {
   church: AggregatedSearchResults["churches"][number];
 }) => {
-  const setSelectedChurch = useSetAtom(setSelectedChurchAtom);
   const events = church.website?.eventsByDay;
   if (events === undefined || Object.keys(events).length === 0) return null;
   return (
     <Link
       href={`/church/${church.uuid}`}
-      onNavigate={() => setSelectedChurch(church)}
       key={church.uuid}
       className="w-full bg-white rounded-2xl p-3 block"
     >

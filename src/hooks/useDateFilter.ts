@@ -35,7 +35,6 @@ export const useDateFilter = (): DateFilterContext => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Read date from URL (URL is the single source of truth)
   const date = getDateFromParams(searchParams);
 
   const setDate = useCallback(

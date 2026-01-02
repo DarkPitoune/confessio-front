@@ -1,13 +1,12 @@
-import { selectedChurchAtom } from "@/store/atoms";
 import { components } from "@/types";
 import { AggregatedSearchResults, Bounds, MAP_TILER_API_KEY } from "@/utils";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
-import { useAtom } from "jotai";
 import L, { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { addAggregationMarker, useAddChurchMarker } from "./markers";
 
 const getAggregationUuid = (
@@ -35,7 +34,13 @@ const Map = ({
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const churchMarkersRef = useRef<{ [key: string]: Marker }>({});
   const aggregationMarkersRef = useRef<{ [key: string]: Marker }>({});
-  const [selectedChurch, setSelectedChurch] = useAtom(selectedChurchAtom);
+
+  const pathname = usePathname();
+  const selectedChurchUuid = pathname?.match(/\/church\/([^/]+)/)?.[1];
+  const selectedChurch = searchResults?.churches.find(
+    (church) => church.uuid === selectedChurchUuid
+  );
+
   const addChurchMarker = useAddChurchMarker();
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
@@ -92,7 +97,6 @@ const Map = ({
         const marker = addChurchMarker(
           mapInstanceRef.current!,
           church,
-          setSelectedChurch,
         );
         churchMarkersRef.current[church.uuid] = marker;
       }
@@ -115,7 +119,7 @@ const Map = ({
       churchMarkersRef.current["current-position-marker"] =
         currentPositionMarker;
     }
-  }, [searchResults, currentPosition, setSelectedChurch, addChurchMarker]);
+  }, [searchResults, currentPosition, addChurchMarker]);
 
   // Pan and click on selected church
   useEffect(() => {

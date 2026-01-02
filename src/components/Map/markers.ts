@@ -1,15 +1,16 @@
+"use client";
 import { AggregatedSearchResults, getFrenchTimeString } from "@/utils";
 import L, { Map } from "leaflet";
+import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 export const useAddChurchMarker = () => {
+  const router = useRouter();
+
   return useCallback(
     (
       map: Map,
       church: AggregatedSearchResults["churches"][number],
-      setSelectedChurch: (
-        church: AggregatedSearchResults["churches"][number],
-      ) => void,
     ) => {
       const firstDayFirstEvent = Object.values(
         church.website?.eventsByDay || {},
@@ -43,17 +44,12 @@ export const useAddChurchMarker = () => {
         //  `<strong>${cleanupChurchName(church.name)}</strong><br/>${getConfessionTimeString(firstDayFirstEvent)}`,
         // )
         .on("click", () => {
-          setSelectedChurch(church);
           const currentParams = new URLSearchParams(window.location.search);
-          window.history.replaceState(
-            null,
-            "",
-            `/church/${church.uuid}?${currentParams.toString()}`,
-          );
+          router.push(`/church/${church.uuid}?${currentParams.toString()}`);
         });
       return marker;
     },
-    [],
+    [router],
   );
 };
 

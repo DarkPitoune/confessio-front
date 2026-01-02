@@ -1,7 +1,5 @@
-import { clearSelectedChurchAtom, SelectedChurch } from "@/store/atoms";
 import { components } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import { useAtom } from "jotai";
 import Image from "next/image";
 import Link from "next/link";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
@@ -11,9 +9,7 @@ import { useSearchParams } from "next/navigation";
 const ChurchCard = ({
   church,
 }: {
-  church:
-    | Exclude<SelectedChurch, null>
-    | components["schemas"]["ChurchDetails"];
+  church: components["schemas"]["ChurchDetails"];
 }) => {
   const { data, isLoading } = useQuery<components["schemas"]["ChurchDetails"]>({
     queryKey: ["churchDetails", church.uuid],
@@ -26,8 +22,6 @@ const ChurchCard = ({
   const searchParams = useSearchParams();
   const query = searchParams.toString();
 
-  const [, clearSelectedChurch] = useAtom(clearSelectedChurchAtom);
-
   return (
     <>
       <div className="px-4">
@@ -35,9 +29,6 @@ const ChurchCard = ({
           <h3 className="font-semibold text-2xl text-white">{church.name}</h3>
           <Link
             href={`/?${query}`}
-            onNavigate={() => {
-              clearSelectedChurch();
-            }}
             className="rounded-full bg-white/10 p-1 shrink-0"
           >
             <Image

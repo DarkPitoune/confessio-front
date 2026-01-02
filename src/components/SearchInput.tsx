@@ -4,8 +4,7 @@ import { Map } from "leaflet";
 import Image from "next/image";
 import { ChangeEvent, useCallback, useRef, useState } from "react";
 import { NavigationModal } from "./NavigationModal";
-import { useSetAtom } from "jotai";
-import { selectedChurchAtom } from "@/store/atoms";
+import { useRouter, usePathname } from "next/navigation";
 
 export const SearchInput = ({
   map,
@@ -21,7 +20,8 @@ export const SearchInput = ({
   setSearchQuery: (query: string) => void;
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const setSelectedChurch = useSetAtom(selectedChurchAtom);
+  const router = useRouter();
+  const pathname = usePathname();
   const [isNavigationModalOpen, setIsNavigationModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const onClick = (item: components["schemas"]["AutocompleteItem"]) => () => {
@@ -34,9 +34,13 @@ export const SearchInput = ({
   const onInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       setSearchQuery(e.target.value);
-      setSelectedChurch(null);
+      // When user types, navigate back to home if on a church detail page
+      if (pathname?.startsWith("/church/")) {
+        const currentParams = new URLSearchParams(window.location.search);
+        router.push(`/?${currentParams.toString()}`);
+      }
     },
-    [setSearchQuery, setSelectedChurch],
+    [setSearchQuery, pathname, router],
   );
 
   return (
