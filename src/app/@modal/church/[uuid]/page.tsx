@@ -1,7 +1,6 @@
 import ModalSheet from "@/components/ModalSheet";
 import { components } from "@/types";
 import { fetchApi } from "@/utils";
-import { Suspense } from "react";
 
 export default async function ChurchModal({
   params,
@@ -12,8 +11,8 @@ export default async function ChurchModal({
   const originalSelectedChurch: components["schemas"]["ChurchDetails"] =
     await fetchApi(`/church/${uuid}`);
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ModalSheet originalSelectedChurch={originalSelectedChurch} />
-    </Suspense>
+    <ModalSheet
+      originalSelectedChurch={originalSelectedChurch}
+    />
   );
 }

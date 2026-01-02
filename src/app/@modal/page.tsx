@@ -1,6 +1,8 @@
-import { Suspense } from "react";
-import ModalSheet from "@/components/ModalSheet";
+import ModalSheetWrapper from "@/components/ModalSheet/ModalSheetWrapper";
 import { fetchChurchesWithWebsites, parseBoundsParam } from "@/utils";
+
+// This is highly dynamic as it depends on the map position. We need the search params, hence the following value
+export const dynamic = 'force-dynamic'
 
 export default async function ModalDefault({
   searchParams,
@@ -18,9 +20,5 @@ export default async function ModalDefault({
         max_lng: bounds.west,
       })
     : { aggregations: [], churches: [] };
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ModalSheet originalSearchResults={initialSearchResults} />
-    </Suspense>
-  );
+  return <ModalSheetWrapper originalSearchResults={initialSearchResults} />;
 }
