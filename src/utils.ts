@@ -5,6 +5,13 @@ export const MAP_TILER_API_KEY = process.env.NEXT_PUBLIC_MAP_TILER_API_KEY;
 if (MAP_TILER_API_KEY === undefined)
   console.error("MAP_TILER_API_KEY is undefined");
 
+export type Bounds = {
+  south: number;
+  north: number;
+  east: number;
+  west: number;
+};
+
 export const fetchApi = async (url: string, options: RequestInit = {}) => {
   const response = await fetch(`${API_URL}${url}`, options);
   return response.json();
@@ -32,7 +39,7 @@ export const fetchChurchesWithWebsites = async ({
   max_lat: number;
   max_lng: number;
   date_filter?: string;
-  signal: AbortSignal;
+  signal?: AbortSignal;
 }): Promise<AggregatedSearchResults> => {
   const searchParams = new URLSearchParams({
     min_lat: min_lat.toString(),
@@ -115,3 +122,18 @@ export const getConfessionTimeString = ({
   end === null
     ? `à ${getFrenchTimeString(start)}`
     : `de ${getFrenchTimeString(start)} à ${getFrenchTimeString(end)}`;
+
+export const parseBoundsParam = (boundsParam: string | null): Bounds | null => {
+  if (!boundsParam) return null;
+
+  const [south, west, north, east] = boundsParam.split(",").map(Number);
+  if (
+    south === undefined ||
+    north === undefined ||
+    east === undefined ||
+    west === undefined
+  )
+    return null;
+
+  return { south, west, north, east };
+};

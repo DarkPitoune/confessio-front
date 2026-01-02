@@ -9,8 +9,6 @@ export type SelectedChurch =
 // Atom for the currently selected church
 export const selectedChurchAtom = atom<SelectedChurch>(null);
 
-export const dateFilterAtom = atom<string>('')
-
 // Derived atom for checking if a church is selected
 export const hasSelectedChurchAtom = atom(
   (get) => get(selectedChurchAtom) !== null,

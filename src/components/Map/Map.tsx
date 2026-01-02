@@ -1,6 +1,6 @@
 import { selectedChurchAtom } from "@/store/atoms";
 import { components } from "@/types";
-import { AggregatedSearchResults, MAP_TILER_API_KEY } from "@/utils";
+import { AggregatedSearchResults, Bounds, MAP_TILER_API_KEY } from "@/utils";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import { useAtom } from "jotai";
 import L, { Map as LeafletMap, Marker } from "leaflet";
@@ -8,7 +8,7 @@ import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
-import { addAggregationMarker, addChurchMarker } from "./markers";
+import { addAggregationMarker, useAddChurchMarker } from "./markers";
 
 const getAggregationUuid = (
   aggregation: components["schemas"]["SearchResult"]["aggregations"][number],
@@ -24,23 +24,33 @@ const Map = ({
   setMap,
   searchResults,
   currentPosition,
-  initialCenter,
+  initialBounds,
 }: {
   setMap: (map: LeafletMap) => void;
   searchResults: AggregatedSearchResults | null | undefined;
   currentPosition: { latitude: number; longitude: number } | null;
-  initialCenter: { latitude: number; longitude: number } | null;
+  initialBounds: Bounds | null;
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const churchMarkersRef = useRef<{ [key: string]: Marker }>({});
   const aggregationMarkersRef = useRef<{ [key: string]: Marker }>({});
   const [selectedChurch, setSelectedChurch] = useAtom(selectedChurchAtom);
-
+  const addChurchMarker = useAddChurchMarker();
   useEffect(() => {
-    if (mapRef.current && !mapInstanceRef.current && initialCenter) {
+    if (mapRef.current && !mapInstanceRef.current) {
+      const startingBounds = initialBounds || {
+        north: 48.9,
+        west: 2.18,
+        south: 48.78,
+        east: 2.48,
+      };
+
       const map = L.map(mapRef.current, {
-        center: [initialCenter.latitude, initialCenter.longitude],
+        center: [
+          (startingBounds.north + startingBounds.south) / 2,
+          (startingBounds.west + startingBounds.east) / 2,
+        ],
         zoom: 14,
         zoomControl: false,
       });
@@ -52,7 +62,7 @@ const Map = ({
         apiKey: MAP_TILER_API_KEY || "",
       }).addTo(map);
     }
-  }, [setMap, initialCenter]);
+  }, [setMap, initialBounds]);
 
   useEffect(() => {
     // adapt map position to current position
@@ -105,7 +115,7 @@ const Map = ({
       churchMarkersRef.current["current-position-marker"] =
         currentPositionMarker;
     }
-  }, [searchResults, currentPosition, setSelectedChurch]);
+  }, [searchResults, currentPosition, setSelectedChurch, addChurchMarker]);
 
   // Pan and click on selected church
   useEffect(() => {

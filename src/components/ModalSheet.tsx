@@ -1,4 +1,5 @@
-import { dateFilterAtom, selectedChurchAtom } from "@/store/atoms";
+"use client";
+import { selectedChurchAtom } from "@/store/atoms";
 import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { SheetRef } from "react-modal-sheet";
@@ -7,15 +8,26 @@ import ModalSheetContainer from "./ModalSheet/ModalSheetContainer";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import { AggregatedSearchResults } from "@/utils";
 import ChurchTile from "./ChurchTile";
+import { useDateFilter } from "@/hooks/useDateFilter";
+import { components } from "@/types";
+import { useSearchResults } from "@/hooks/useSearchResults";
 
 function ModalSheet({
-  searchResults,
+  originalSearchResults,
+  originalSelectedChurch,
 }: {
-  searchResults: AggregatedSearchResults | null | undefined;
+  originalSearchResults?: AggregatedSearchResults | null | undefined;
+  originalSelectedChurch?: components["schemas"]["ChurchDetails"];
 }) {
-  const [selectedChurch] = useAtom(selectedChurchAtom);
-  const [dateFilterValue, setDateFilterValue] = useAtom(dateFilterAtom);
+  const [churchFromAtom] = useAtom(selectedChurchAtom);
+  const selectedChurch = churchFromAtom || originalSelectedChurch;
+  const { date, setDate } = useDateFilter();
   const sheetRef = useRef<SheetRef>(null);
+  const { data: searchResults } = useSearchResults();
+
+  const displayedSearchResults = searchResults
+    ? searchResults
+    : originalSearchResults;
 
   useEffect(() => {
     if (selectedChurch) sheetRef.current?.snapTo(0);
@@ -42,15 +54,17 @@ function ModalSheet({
                 id="date-filter"
                 type="date"
                 className="px-3 py-1 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lightblue focus:border-transparent backdrop-blur-sm"
-                value={dateFilterValue}
-                onChange={({ target }) => setDateFilterValue(target.value)}
+                value={date?.toISOString().split("T")[0] || ""}
+                onChange={({ target }) =>
+                  setDate(target.value ? new Date(target.value) : null)
+                }
               />
             </div>
           </div>
           <hr className="text-gray-500" />
           <ModalSheetScroller draggableAt="top">
             <div className="p-4 space-y-4">
-              {searchResults?.churches?.map((church) => (
+              {displayedSearchResults?.churches?.map((church) => (
                 <ChurchTile key={church.uuid} church={church} />
               ))}
             </div>

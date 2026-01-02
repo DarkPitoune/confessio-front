@@ -1,5 +1,9 @@
 # Before V0
 - faire du server side rendering pour la page /church et la page /diocese
+  - il est possible que ce soit beaucoup plus simple de switch de tanstasck query a (SWR)[https://swr.vercel.app/docs/getting-started] pour ca
+- le bouton back en navigation ne trigger pas de re-render, ou peut etre que ca marche en fait
+- eventuellement changer la couleur de la tooltip selectionnée
+
 
 ## Server side rendering: the big bad plan
 le pb c'est que la page church doit etre accedee de 2 facons differentes. soit en naviguant depuis la page / soit depuis le lien direct. 

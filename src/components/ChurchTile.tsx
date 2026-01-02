@@ -36,10 +36,7 @@ const ChurchTile = ({
   return (
     <Link
       href={`/church/${church.uuid}`}
-      onNavigate={(event) => {
-        event.preventDefault();
-        setSelectedChurch(church);
-      }}
+      onNavigate={() => setSelectedChurch(church)}
       key={church.uuid}
       className="w-full bg-white rounded-2xl p-3 block"
     >

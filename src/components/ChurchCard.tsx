@@ -1,4 +1,4 @@
-import { clearSelectedChurchAtom } from "@/store/atoms";
+import { clearSelectedChurchAtom, SelectedChurch } from "@/store/atoms";
 import { components } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
@@ -6,18 +6,25 @@ import Image from "next/image";
 import Link from "next/link";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import { fetchApi } from "@/utils";
+import { useSearchParams } from "next/navigation";
 
 const ChurchCard = ({
   church,
 }: {
-  church: components["schemas"]["SearchResult"]["churches"][number];
+  church:
+    | Exclude<SelectedChurch, null>
+    | components["schemas"]["ChurchDetails"];
 }) => {
-  const { data: churchDetails, isLoading } = useQuery<
-    components["schemas"]["ChurchDetails"]
-  >({
+  const { data, isLoading } = useQuery<components["schemas"]["ChurchDetails"]>({
     queryKey: ["churchDetails", church.uuid],
     queryFn: () => fetchApi(`/church/${church.uuid}`),
   });
+
+  // Use the server-fetched church only if it's type safe
+  const churchDetails = isLoading && "schedules" in church ? church : data;
+
+  const searchParams = useSearchParams();
+  const query = searchParams.toString();
 
   const [, clearSelectedChurch] = useAtom(clearSelectedChurchAtom);
 
@@ -27,9 +34,8 @@ const ChurchCard = ({
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-2xl text-white">{church.name}</h3>
           <Link
-            href="/"
-            onNavigate={(event) => {
-              event.preventDefault();
+            href={`/?${query}`}
+            onNavigate={() => {
               clearSelectedChurch();
             }}
             className="rounded-full bg-white/10 p-1 shrink-0"
