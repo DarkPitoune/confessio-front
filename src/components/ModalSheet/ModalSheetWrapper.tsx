@@ -7,16 +7,16 @@ import { components } from "@/types";
 
 function ModalSheetWrapper({
   originalSearchResults,
-  originalSelectedChurch,
+  selectedChurch,
 }: {
   originalSearchResults?: AggregatedSearchResults | null | undefined;
-  originalSelectedChurch?: components["schemas"]["ChurchDetails"];
+  selectedChurch?: components["schemas"]["ChurchDetails"];
 }) {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <ModalSheet
         originalSearchResults={originalSearchResults}
-        originalSelectedChurch={originalSelectedChurch}
+        selectedChurch={selectedChurch}
       />
     </Suspense>
   );

@@ -17,13 +17,10 @@ function ModalSheet({
   originalSearchResults?: AggregatedSearchResults | null | undefined;
   selectedChurch?: components["schemas"]["ChurchDetails"];
 }) {
+  // URL is the single source of truth - use the church from server if present
   const { date, setDate } = useDateFilter();
   const sheetRef = useRef<SheetRef>(null);
   const { data: searchResults } = useSearchResults();
-  console.log("render MODAL SHEET", {
-    originalSearchResults,
-    selectedChurch,
-  });
 
   const displayedSearchResults = searchResults
     ? searchResults

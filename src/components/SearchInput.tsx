@@ -47,7 +47,7 @@ export const SearchInput = ({
     <>
       <div
         className={clsx([
-          "absolute flex flex-col items-stretch justify-start p-0 z-50 md:w-[468px] rounded-3xl inset-x-4 top-4",
+          "absolute flex flex-col items-stretch justify-start p-0 z-40 md:w-[468px] rounded-3xl inset-x-4 top-4",
           { "bg-white bottom-4": isFocused },
         ])}
       >

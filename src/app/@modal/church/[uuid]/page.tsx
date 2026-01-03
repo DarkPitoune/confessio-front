@@ -8,11 +8,8 @@ export default async function ChurchModal({
   params: Promise<{ uuid: string }>;
 }) {
   const { uuid } = await params;
-  const originalSelectedChurch: components["schemas"]["ChurchDetails"] =
-    await fetchApi(`/church/${uuid}`);
-  return (
-    <ModalSheet
-      originalSelectedChurch={originalSelectedChurch}
-    />
+  const selectedChurch: components["schemas"]["ChurchDetails"] = await fetchApi(
+    `/church/${uuid}`,
   );
+  return <ModalSheet selectedChurch={selectedChurch} />;
 }

@@ -1,6 +1,6 @@
 # Before V0
 - faire du server side rendering pour la page /diocese
-- le bouton back en navigation ne trigger pas de re-render quand on clique sur la tooltip d'une eglise
+- la search est maintenant petee, a fix
 
 # V1 nice cleanups
 - optimisation : fetch dans un rectangle 10% plus grand pour anticiper les micros-deplacements
