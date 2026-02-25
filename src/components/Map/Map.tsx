@@ -1,11 +1,12 @@
 import { components } from "@/types";
-import { AggregatedSearchResults, Bounds, MAP_TILER_API_KEY } from "@/utils";
+import { AggregatedSearchResults, Bounds, MAP_TILER_API_KEY, MOBILE_BREAKPOINT } from "@/utils";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import L, { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+import "leaflet-active-area";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { addAggregationMarker, useAddChurchMarker } from "./markers";
 
@@ -41,6 +42,15 @@ const Map = ({
     (church) => church.uuid === selectedChurchUuid
   );
 
+  // Values match ModalSheet width (desktop) and collapsed snap point (mobile)
+  const getActiveAreaStyles = useCallback((): Partial<CSSStyleDeclaration> => {
+    const isDesktop = window.innerWidth >= MOBILE_BREAKPOINT;
+    if (isDesktop) {
+      return { position: "absolute", top: "0", left: "500px", right: "0", bottom: "0" };
+    }
+    return { position: "absolute", top: "0", left: "0", right: "0", bottom: "140px" };
+  }, []);
+
   const addChurchMarker = useAddChurchMarker();
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
@@ -61,13 +71,24 @@ const Map = ({
       });
 
       mapInstanceRef.current = map;
+      map.setActiveArea(getActiveAreaStyles());
       setMap(map);
 
       new MaptilerLayer({
         apiKey: MAP_TILER_API_KEY || "",
       }).addTo(map);
     }
-  }, [setMap, initialBounds]);
+  }, [setMap, initialBounds, getActiveAreaStyles]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.setActiveArea(getActiveAreaStyles());
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [getActiveAreaStyles]);
 
   useEffect(() => {
     // adapt map position to current position

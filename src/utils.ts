@@ -5,6 +5,8 @@ export const MAP_TILER_API_KEY = process.env.NEXT_PUBLIC_MAP_TILER_API_KEY;
 if (MAP_TILER_API_KEY === undefined)
   console.error("MAP_TILER_API_KEY is undefined");
 
+export const MOBILE_BREAKPOINT = 768;
+
 export type Bounds = {
   south: number;
   north: number;
