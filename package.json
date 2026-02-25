@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "pull-types": "openapi-typescript https://confessio.fr/front/api/openapi.json -o src/types.d.ts"
+    "pull-types": "openapi-typescript https://confessio.fr/front/api/openapi.json -o src/types.d.ts",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
   },
   "dependencies": {
     "@maptiler/leaflet-maptilersdk": "^4.1.1",
@@ -28,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/leaflet": "^1.9.18",
     "@types/node": "^20",
