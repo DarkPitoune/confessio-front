@@ -4,7 +4,7 @@ import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import L, { Map as LeafletMap } from "leaflet";
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
-// import "leaflet-active-area";
+import "@/lib/leaflet-active-area";
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -67,7 +67,7 @@ const Map = ({
 
       mapInstanceRef.current = map;
       setMapInstance(map);
-      // map.setActiveArea(getActiveAreaStyles());
+      map.setActiveArea(getActiveAreaStyles());
       setMap(map);
 
       new MaptilerLayer({
@@ -79,7 +79,7 @@ const Map = ({
   useEffect(() => {
     const handleResize = () => {
       if (mapInstanceRef.current) {
-        // mapInstanceRef.current.setActiveArea(getActiveAreaStyles());
+        mapInstanceRef.current.setActiveArea(getActiveAreaStyles());
       }
     };
     window.addEventListener("resize", handleResize);
