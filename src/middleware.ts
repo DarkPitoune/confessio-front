@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 const PARIS_LAT = 48.8566;
 const PARIS_LNG = 2.3522;
 
-// Half-span of the bounding box (~zoom 14)
-const LAT_OFFSET = 0.06;
-const LNG_OFFSET = 0.15;
+// Half-span of the bounding box (~200km wide)
+const LAT_OFFSET = 0.9;
+const LNG_OFFSET = 1.3;
 
 function makeBoundsParam(lat: number, lng: number): string {
   const south = (lat - LAT_OFFSET).toFixed(6);
