@@ -5,6 +5,8 @@ import Image from "next/image";
 import { ChangeEvent, useCallback, useRef, useState } from "react";
 import { NavigationModal } from "./NavigationModal";
 import { useRouter, usePathname } from "next/navigation";
+import { useAtom } from "jotai";
+import { isSearchFocusedAtom } from "@/atoms";
 
 export const SearchInput = ({
   map,
@@ -19,7 +21,7 @@ export const SearchInput = ({
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
+  const [isFocused, setIsFocused] = useAtom(isSearchFocusedAtom);
   const router = useRouter();
   const pathname = usePathname();
   const [isNavigationModalOpen, setIsNavigationModalOpen] = useState(false);
@@ -28,7 +30,7 @@ export const SearchInput = ({
     if (map && item.latitude && item.longitude) {
       const zoomLevel = item.type === "municipality" ? 13 : 15;
       map.setView([item.latitude, item.longitude], zoomLevel);
-      setSearchQuery(item.name);
+      inputRef.current?.blur();
     }
   };
   const onInputChange = useCallback(
@@ -47,8 +49,11 @@ export const SearchInput = ({
     <>
       <div
         className={clsx([
-          "absolute flex flex-col items-stretch justify-start p-0 z-40 md:w-[468px] rounded-3xl inset-x-4 top-4",
-          { "bg-white bottom-4": isFocused },
+          "absolute flex flex-col items-stretch justify-start p-0 z-40 md:w-[468px] md:rounded-3xl md:inset-x-4 md:top-4",
+          isFocused
+            ? "inset-x-0 top-0 h-dvh p-4 md:h-auto md:p-0 bg-white md:max-h-[calc(100dvh-2rem)]"
+            : "inset-x-4 top-4 rounded-3xl",
+          isFocused && data.length === 0 && "md:h-[calc(100dvh-2rem)]",
         ])}
       >
         <div
@@ -106,11 +111,21 @@ export const SearchInput = ({
             />
           )}
         </div>
-        <ul className={clsx("min-h-0 overflow-y-auto bg-white")}>
+        <ul className={clsx("min-h-0 overflow-y-auto bg-white rounded-b-3xl flex-1")}>
+          {isFocused && data.length === 0 && !isLoading && (
+            <li className="flex items-center justify-center h-full p-4">
+              <p className="font-bold text-gray-400 text-center">
+                {searchQuery.length > 0
+                  ? "Pas de résultat trouvé pour cette recherche"
+                  : "Tapez le nom d'une ville, d'une église"}
+              </p>
+            </li>
+          )}
           {isFocused &&
             data.map((item, index) => (
               <li key={index} className="p-2 text-black divide-gray-600">
                 <button
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={onClick(item)}
                   className="w-full text-left px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center hover:bg-gray-100 gap-2"
                 >

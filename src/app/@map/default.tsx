@@ -51,6 +51,7 @@ function HomePage() {
       if (debouncedSearchQuery.length === 0) return Promise.resolve([]);
       return fetchApi(`/autocomplete?query=${debouncedSearchQuery}`);
     },
+    placeholderData: (previousData) => previousData,
   });
 
   const { data: searchResults, isFetching: isSearchResultsFetching } =
@@ -92,7 +93,7 @@ function HomePage() {
     <>
       <SearchInput
         map={map}
-        isLoading={isLoading || isSearchResultsFetching}
+        isLoading={isLoading || isSearchResultsFetching || searchQuery !== debouncedSearchQuery}
         data={data || []}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}

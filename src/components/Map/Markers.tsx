@@ -59,7 +59,7 @@ export const ChurchMarker = ({
   useEffect(() => {
     if (!markerRef.current) return;
     if (selected) {
-      const zoom = Math.max(map.getZoom(), 14);
+      const zoom = Math.max(map.getZoom(), 16);
       map.flyTo([latitude, longitude], zoom);
       markerRef.current.openPopup();
     } else {

@@ -81,6 +81,9 @@ body {
 .church-marker {
   background-color: var(--color-lightblue);
   height: 24px;
+  color: white;
+  font-weight: 600;
+  font-size:14;
   width: 50px;
   border-radius: 15px;
   display: flex;
