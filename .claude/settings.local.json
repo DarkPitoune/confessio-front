@@ -16,7 +16,11 @@
       "Bash(ls:*)",
       "Bash(npx playwright:*)",
       "Bash(pnpm lint:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(pnpm outdated:*)",
+      "Bash(pnpm tsc:*)",
+      "mcp__penpot__execute_code",
+      "mcp__penpot__export_shape"
     ],
     "deny": [],
     "ask": []

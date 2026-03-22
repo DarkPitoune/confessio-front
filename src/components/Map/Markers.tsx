@@ -14,6 +14,7 @@ export const ChurchMarker = ({
 }) => {
   const router = useRouter();
   const markerRef = useRef<LeafletMarker | null>(null);
+  const prevSelectedRef = useRef(selected);
 
   const firstDayFirstEvent = Object.values(
     website?.eventsByDay || {},
@@ -34,13 +35,15 @@ export const ChurchMarker = ({
         }),
       }).addTo(map);
     } else {
+      const markerClass = selected ? "church-marker-selected" : "church-marker";
+      const size: [number, number] = selected ? [58, 28] : [50, 24];
       marker = L.marker([latitude, longitude], {
         icon: L.divIcon({
           className: "", // needed to remove the default leaflet class
-          html: `<div class="church-marker">${timeLabel}</div>`,
-          iconSize: [50, 24],
-          popupAnchor: [0, -24], // from the iconAnchor, up the entire height
-          iconAnchor: [25, 24], // from the top left, half the width and the entire height
+          html: `<div class="${markerClass}">${timeLabel}</div>`,
+          iconSize: size,
+          popupAnchor: [0, -size[1]], // from the iconAnchor, up the entire height
+          iconAnchor: [size[0] / 2, size[1]], // from the top left, half the width and the entire height
         }),
       })
         .addTo(map)
@@ -54,17 +57,23 @@ export const ChurchMarker = ({
     return () => {
       marker.remove();
     };
-  }, [map, router, uuid, latitude, longitude, timeLabel]);
+  }, [map, router, uuid, latitude, longitude, timeLabel, selected]);
 
   useEffect(() => {
     if (!markerRef.current) return;
     if (selected) {
-      const zoom = Math.max(map.getZoom(), 16);
-      map.flyTo([latitude, longitude], zoom);
+      // Only fly to the church when selected transitions from false to true,
+      // not on remount (e.g. marker re-entering viewport while already selected)
+      if (!prevSelectedRef.current) {
+        const currentZoom = map.getZoom();
+        const zoom = currentZoom < 14 ? 16 : currentZoom;
+        map.flyTo([latitude, longitude], zoom);
+      }
       markerRef.current.openPopup();
     } else {
       markerRef.current.closePopup();
     }
+    prevSelectedRef.current = selected;
   }, [selected, map, latitude, longitude]);
 
   return null;

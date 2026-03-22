@@ -1,6 +1,7 @@
 # Before V0
 - faire du server side rendering pour la page /diocese
 - la search est maintenant petee, a fix
+- utiliser un pack d'icone genre phosphore icons
 
 # V1 nice cleanups
 - optimisation : fetch dans un rectangle 10% plus grand pour anticiper les micros-deplacements
@@ -8,6 +9,7 @@
 - different look for the church tile when a date filter is applied? no need to specify date..
 - le site n'est pas du tout TAB-able, on doit focus le tab dans la modale
 - revoir la bottom modal sur mobile, le SwipeableDrawer de MUI semble très prometteur, mais pas concu pour...
+- fix: clicking a church pin causes the modal sheet to animate up from bottom instead of appearing in place (remount issue)
 
 
 # Discussion topics

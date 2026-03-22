@@ -36,14 +36,24 @@ function HomePage() {
   const searchParams = useSearchParams();
   const initialBounds = parseBoundsParam(searchParams.get("bounds"));
 
-  const [debouncedSearchQuery] = useDebounce(searchQuery, 100);
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
   const [currentPosition, setCurrentPosition] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
 
-  const { data, isLoading } = useQuery<
+  // Ask for geolocation on first load when no bounds in URL
+  useEffect(() => {
+    if (!initialBounds && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentPosition({ latitude, longitude });
+      });
+    }
+  }, [initialBounds]);
+
+  const { data, isLoading, isFetching } = useQuery<
     components["schemas"]["AutocompleteItem"][]
   >({
     queryKey: ["mapData", debouncedSearchQuery],
@@ -93,7 +103,7 @@ function HomePage() {
     <>
       <SearchInput
         map={map}
-        isLoading={isLoading || isSearchResultsFetching || searchQuery !== debouncedSearchQuery}
+        isLoading={isLoading || isFetching || isSearchResultsFetching || searchQuery !== debouncedSearchQuery}
         data={data || []}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}

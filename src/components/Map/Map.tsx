@@ -1,5 +1,5 @@
 import { components } from "@/types";
-import { AggregatedSearchResults, Bounds, MAP_TILER_API_KEY, MOBILE_BREAKPOINT } from "@/utils";
+import { AggregatedSearchResults, Bounds, fetchApi, MAP_TILER_API_KEY, MOBILE_BREAKPOINT } from "@/utils";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import L, { Map as LeafletMap } from "leaflet";
 import "leaflet-defaulticon-compatibility";
@@ -8,6 +8,7 @@ import "@/lib/leaflet-active-area";
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { ChurchMarker, AggregationMarker, CurrentPositionMarker } from "./Markers";
 
 const getAggregationUuid = (
@@ -37,6 +38,24 @@ const Map = ({
 
   const pathname = usePathname();
   const selectedChurchUuid = pathname?.match(/\/church\/([^/]+)/)?.[1];
+
+  // Fetch selected church details to center map when no bounds are provided
+  const { data: selectedChurchDetails } = useQuery<
+    components["schemas"]["ChurchDetails"]
+  >({
+    queryKey: ["churchDetails", selectedChurchUuid],
+    queryFn: () => fetchApi(`/church/${selectedChurchUuid}`),
+    enabled: !!selectedChurchUuid && !initialBounds,
+  });
+
+  useEffect(() => {
+    if (mapInstanceRef.current && selectedChurchDetails && !initialBounds) {
+      mapInstanceRef.current.setView(
+        [selectedChurchDetails.latitude, selectedChurchDetails.longitude],
+        16,
+      );
+    }
+  }, [selectedChurchDetails, initialBounds]);
 
   // Values match ModalSheet width (desktop) and collapsed snap point (mobile)
   const getActiveAreaStyles = useCallback((): Partial<CSSStyleDeclaration> => {

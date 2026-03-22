@@ -51,6 +51,7 @@ function ModalSheet({
                 id="date-filter"
                 type="date"
                 className="px-3 py-1 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lightblue focus:border-transparent backdrop-blur-sm"
+                min={new Date().toISOString().split("T")[0]}
                 value={date?.toISOString().split("T")[0] || ""}
                 onChange={({ target }) =>
                   setDate(target.value ? new Date(target.value) : null)

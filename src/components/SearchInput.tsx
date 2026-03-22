@@ -2,11 +2,17 @@ import { components } from "@/types";
 import clsx from "clsx";
 import { Map } from "leaflet";
 import Image from "next/image";
-import { ChangeEvent, useCallback, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { NavigationModal } from "./NavigationModal";
 import { useRouter, usePathname } from "next/navigation";
 import { useAtom } from "jotai";
 import { isSearchFocusedAtom } from "@/atoms";
+
+const mapItemTypeToImageProps: Record<string, { src: string; alt: string }> = {
+  church: { src: "/church.svg", alt: "Église" },
+  parish: { src: "/parish.svg", alt: "Paroisse" },
+  municipality: { src: "/city.svg", alt: "Ville" },
+};
 
 export const SearchInput = ({
   map,
@@ -26,6 +32,24 @@ export const SearchInput = ({
   const pathname = usePathname();
   const [isNavigationModalOpen, setIsNavigationModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const closeSearch = useCallback(() => {
+    setIsFocused(false);
+    inputRef.current?.blur();
+  }, [setIsFocused]);
+
+  // Android back button closes search instead of navigating away
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (isFocused) {
+        e.preventDefault();
+        closeSearch();
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isFocused, closeSearch]);
+
   const onClick = (item: components["schemas"]["AutocompleteItem"]) => () => {
     if (map && item.latitude && item.longitude) {
       const zoomLevel = item.type === "municipality" ? 13 : 15;
@@ -49,37 +73,60 @@ export const SearchInput = ({
     <>
       <div
         className={clsx([
-          "absolute flex flex-col items-stretch justify-start p-0 z-40 md:w-[468px] md:rounded-3xl md:inset-x-4 md:top-4",
+          "absolute flex flex-col items-stretch justify-start z-40 md:w-[468px] md:rounded-3xl md:inset-x-4 md:top-4",
           isFocused
-            ? "inset-x-0 top-0 h-dvh p-4 md:h-auto md:p-0 bg-white md:max-h-[calc(100dvh-2rem)]"
+            ? "inset-0 bg-white pt-4 px-4 md:bg-transparent md:p-0 md:bottom-4 md:h-auto"
             : "inset-x-4 top-4 rounded-3xl",
-          isFocused && data.length === 0 && "md:h-[calc(100dvh-2rem)]",
         ])}
       >
         <div
           className={clsx([
-            "p-2 border bg-white gap-2 border-gray-300 rounded-full text-black flex",
+            "p-2 border bg-white gap-2 border-gray-300 rounded-full text-black flex relative z-10",
             { "shadow-lg": !isFocused },
           ])}
         >
-          <button onClick={() => setIsNavigationModalOpen(true)}>
-            <Image
-              src="/confessioLogoBlue.svg"
-              alt="Logo de Confessio"
-              width={24}
-              height={24}
-            />
-          </button>
+          {isFocused ? (
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={closeSearch}
+              className="cursor-pointer"
+            >
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+          ) : (
+            <button onClick={() => setIsNavigationModalOpen(true)} className="cursor-pointer">
+              <Image
+                src="/confessioLogoBlue.svg"
+                alt="Logo de Confessio"
+                width={24}
+                height={24}
+              />
+            </button>
+          )}
           <input
             ref={inputRef}
             type="text"
             placeholder="Chercher une église ou une ville"
             value={searchQuery}
             onChange={onInputChange}
-            onFocus={() => setIsFocused(true)}
+            onFocus={() => {
+              setIsFocused(true);
+              history.pushState({ search: true }, "");
+            }}
             onBlur={() => setIsFocused(false)}
             className="outline-none flex-1"
           />
+          {isLoading && (
+            <Image
+              src="/spinner.svg"
+              alt="Loading"
+              width={18}
+              height={18}
+              className="animate-spin"
+            />
+          )}
           {searchQuery.length > 0 && (
             <button
               onClick={() => {
@@ -101,17 +148,13 @@ export const SearchInput = ({
               />
             </button>
           )}
-          {isLoading && (
-            <Image
-              src="/spinner.svg"
-              alt="Loading"
-              width={18}
-              height={18}
-              className="animate-spin"
-            />
-          )}
         </div>
-        <ul className={clsx("min-h-0 overflow-y-auto bg-white rounded-b-3xl flex-1")}>
+        <ul
+          className={clsx(
+            "min-h-0 overflow-y-auto bg-white rounded-b-3xl flex-1 -mt-5 pt-5",
+            { hidden: !isFocused },
+          )}
+        >
           {isFocused && data.length === 0 && !isLoading && (
             <li className="flex items-center justify-center h-full p-4">
               <p className="font-bold text-gray-400 text-center">
@@ -122,7 +165,7 @@ export const SearchInput = ({
             </li>
           )}
           {isFocused &&
-            data.map((item, index) => (
+            data.filter((item) => item.type !== "parish").map((item, index) => (
               <li key={index} className="p-2 text-black divide-gray-600">
                 <button
                   onMouseDown={(e) => e.preventDefault()}
@@ -130,8 +173,8 @@ export const SearchInput = ({
                   className="w-full text-left px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center hover:bg-gray-100 gap-2"
                 >
                   <Image
-                    src={item.type === "church" ? "/church.svg" : "/city.svg"}
-                    alt={item.type === "church" ? "Église" : "Ville"}
+                    src={mapItemTypeToImageProps[item.type]?.src ?? "/city.svg"}
+                    alt={mapItemTypeToImageProps[item.type]?.alt ?? "Lieu"}
                     width={24}
                     height={24}
                   />

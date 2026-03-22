@@ -12,8 +12,7 @@ function ModalSheetContainerServer({
 
   return (
     <div
-      className="absolute top-[74px] z-30 w-[500px] px-4 pb-4 flex flex-col"
-      style={{ maxHeight: "calc(100vh - 74px)" }}
+      className="absolute z-30 w-full max-w-[500px] px-0 md:px-4 pb-4 flex flex-col bottom-0 md:bottom-auto md:top-[74px] max-h-[140px] md:max-h-[calc(100vh-74px)] overflow-hidden"
     >
       <div className="react-modal-sheet-container flex flex-col min-h-0 pt-3">
         {children}
