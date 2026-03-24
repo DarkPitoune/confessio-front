@@ -45,6 +45,7 @@ export const ChurchMarker = ({
           popupAnchor: [0, -size[1]], // from the iconAnchor, up the entire height
           iconAnchor: [size[0] / 2, size[1]], // from the top left, half the width and the entire height
         }),
+        zIndexOffset: selected ? 1000 : 0,
       })
         .addTo(map)
         .on("click", () => {

@@ -4,6 +4,7 @@ import { Map } from "leaflet";
 import Image from "next/image";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { NavigationModal } from "./NavigationModal";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAtom } from "jotai";
 import { isSearchFocusedAtom } from "@/atoms";
@@ -165,13 +166,9 @@ export const SearchInput = ({
             </li>
           )}
           {isFocused &&
-            data.filter((item) => item.type !== "parish").map((item, index) => (
-              <li key={index} className="p-2 text-black divide-gray-600">
-                <button
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={onClick(item)}
-                  className="w-full text-left px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center hover:bg-gray-100 gap-2"
-                >
+            data.filter((item) => item.type !== "parish").map((item, index) => {
+              const inner = (
+                <>
                   <Image
                     src={mapItemTypeToImageProps[item.type]?.src ?? "/city.svg"}
                     alt={mapItemTypeToImageProps[item.type]?.alt ?? "Lieu"}
@@ -182,9 +179,32 @@ export const SearchInput = ({
                     <div className="flex flex-col">{item.name}</div>
                     <div className="text-xs text-gray-500">{item.context}</div>
                   </div>
-                </button>
-              </li>
-            ))}
+                </>
+              );
+              const className =
+                "w-full text-left px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center hover:bg-gray-100 gap-2";
+              return (
+                <li key={index} className="p-2 text-black divide-gray-600">
+                  {item.type === "church" && item.uuid ? (
+                    <Link
+                      href={`/church/${item.uuid}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      className={className}
+                    >
+                      {inner}
+                    </Link>
+                  ) : (
+                    <button
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={onClick(item)}
+                      className={className}
+                    >
+                      {inner}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
         </ul>
       </div>
       <NavigationModal

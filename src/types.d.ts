@@ -181,6 +181,8 @@ export interface components {
             latitude?: number | null;
             /** Longitude */
             longitude?: number | null;
+            /** Uuid */
+            uuid?: string | null;
         };
         /** ChurchDetails */
         ChurchDetails: {
