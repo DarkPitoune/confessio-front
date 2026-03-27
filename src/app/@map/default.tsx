@@ -7,7 +7,7 @@ import { fetchApi, parseBoundsParam } from "@/utils";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { Map as LeafletMap } from "leaflet";
-import Image from "next/image";
+import { CrosshairSimpleIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useMapBounds } from "@/hooks/useMapBounds";
 import { useSearchResults } from "@/hooks/useSearchResults";
@@ -16,13 +16,7 @@ import { useSearchParams } from "next/navigation";
 const Map = dynamic(() => import("../../components/Map/Map"), {
   loading: () => (
     <div className="h-screen w-screen flex flex-col gap-4 items-center justify-center">
-      <Image
-        src="/spinner.svg"
-        alt="Loading"
-        width={40}
-        height={40}
-        className="animate-spin"
-      />
+      <CircleNotchIcon size={40} className="animate-spin text-deepblue" />
       <p className="text-deepblue font-medium">Chargement...</p>
     </div>
   ),
@@ -112,7 +106,7 @@ function HomePage() {
         onClick={handleCenterOnMe}
         className="absolute right-4 bottom-[160px] md:bottom-4 size-12 z-20 bg-deepblue rounded-full flex items-center justify-center cursor-pointer shadow-lg"
       >
-        <Image src="/target.svg" alt="Centrer sur moi" width={32} height={32} />
+        <CrosshairSimpleIcon size={32} color="white" />
       </button>
       <div className="relative z-10 h-screen w-screen">
         <Map

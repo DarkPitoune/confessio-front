@@ -36,7 +36,7 @@ function ModalSheet({
         <ChurchCard church={selectedChurch} />
       ) : (
         <>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 py-2">
             <h4 className="text-base md:text-lg font-semibold text-white px-4">
               Horaires de confession proches de vous
             </h4>

@@ -124,6 +124,8 @@ export interface components {
              * Format: uuid
              */
             website_uuid: string;
+            /** Events */
+            events: components["schemas"]["EventOut"][];
         };
         /** EventOut */
         EventOut: {
@@ -208,6 +210,8 @@ export interface components {
              * Format: uuid
              */
             website_uuid: string;
+            /** Events */
+            events: components["schemas"]["EventOut"][];
             /** Schedules */
             schedules: components["schemas"]["ScheduleOut"][];
         };
@@ -317,7 +321,11 @@ export interface operations {
     };
     front_front_api_api_front_church_details: {
         parameters: {
-            query?: never;
+            query?: {
+                date_filter?: string | null;
+                hour_min?: number;
+                hour_max?: number;
+            };
             header?: never;
             path: {
                 church_uuid: string;

@@ -8,11 +8,13 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAtom } from "jotai";
 import { isSearchFocusedAtom } from "@/atoms";
+import { ArrowLeftIcon, BuildingsIcon, ChurchIcon, CircleNotchIcon, UsersIcon, XIcon } from "@phosphor-icons/react";
+import { Icon } from "@phosphor-icons/react/dist/lib/types";
 
-const mapItemTypeToImageProps: Record<string, { src: string; alt: string }> = {
-  church: { src: "/church.svg", alt: "Église" },
-  parish: { src: "/parish.svg", alt: "Paroisse" },
-  municipality: { src: "/city.svg", alt: "Ville" },
+const mapItemTypeToIcon: Record<string, Icon> = {
+  church: ChurchIcon,
+  parish: UsersIcon,
+  municipality: BuildingsIcon,
 };
 
 export const SearchInput = ({
@@ -92,9 +94,7 @@ export const SearchInput = ({
               onClick={closeSearch}
               className="cursor-pointer"
             >
-              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
+              <ArrowLeftIcon size={24} />
             </button>
           ) : (
             <button onClick={() => setIsNavigationModalOpen(true)} className="cursor-pointer">
@@ -120,13 +120,7 @@ export const SearchInput = ({
             className="outline-none flex-1"
           />
           {isLoading && (
-            <Image
-              src="/spinner.svg"
-              alt="Loading"
-              width={18}
-              height={18}
-              className="animate-spin"
-            />
+            <CircleNotchIcon size={18} className="animate-spin self-center shrink-0" />
           )}
           {searchQuery.length > 0 && (
             <button
@@ -141,12 +135,7 @@ export const SearchInput = ({
               onMouseDown={(e) => e.preventDefault()}
               onMouseUp={(e) => e.preventDefault()}
             >
-              <Image
-                src="/x-mark.svg"
-                alt="Clear search"
-                width={18}
-                height={18}
-              />
+              <XIcon size={18} />
             </button>
           )}
         </div>
@@ -167,14 +156,10 @@ export const SearchInput = ({
           )}
           {isFocused &&
             data.filter((item) => item.type !== "parish").map((item, index) => {
+              const ItemIcon = mapItemTypeToIcon[item.type] ?? BuildingsIcon;
               const inner = (
                 <>
-                  <Image
-                    src={mapItemTypeToImageProps[item.type]?.src ?? "/city.svg"}
-                    alt={mapItemTypeToImageProps[item.type]?.alt ?? "Lieu"}
-                    width={24}
-                    height={24}
-                  />
+                  <ItemIcon size={24} />
                   <div className="flex flex-col">
                     <div className="flex flex-col">{item.name}</div>
                     <div className="text-xs text-gray-500">{item.context}</div>
