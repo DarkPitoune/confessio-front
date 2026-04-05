@@ -22,10 +22,27 @@ export const fetchApi = async (url: string, options: RequestInit = {}) => {
 export type AggregatedSearchResults = {
   aggregations: components["schemas"]["SearchResult"]["aggregations"];
   churches: (components["schemas"]["SearchResult"]["churches"][number] & {
-    website?: components["schemas"]["WebsiteOut"] & {
-      eventsByDay?: Record<string, components["schemas"]["EventOut"][]>;
-    };
+    eventsByDay?: Record<string, components["schemas"]["EventOut"][]>;
   })[];
+};
+
+export const computeEventsByDay = (
+  events: components["schemas"]["EventOut"][],
+): Record<string, components["schemas"]["EventOut"][]> => {
+  const today = new Date();
+  const sorted = [...events].sort(
+    (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+  );
+
+  const eventsByDay: Record<string, components["schemas"]["EventOut"][]> = {};
+  for (const event of sorted) {
+    if (new Date(event.start) < today) continue;
+    if (event.end && new Date(event.end) < today) continue;
+    const dayKey = new Date(event.start).toDateString();
+    if (!eventsByDay[dayKey]) eventsByDay[dayKey] = [];
+    eventsByDay[dayKey].push(event);
+  }
+  return eventsByDay;
 };
 
 export const fetchChurchesWithWebsites = async ({
@@ -58,42 +75,10 @@ export const fetchChurchesWithWebsites = async ({
     `/search?${searchParams.toString()}`,
     { signal },
   );
-  const churches = response.churches.map((church) => {
-    const website = response.websites.find(
-      (website) => website.uuid === church.website_uuid,
-    );
-
-    const events = website?.events
-      .filter((event) => event.church_uuid === church.uuid)
-      .sort(
-        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
-      );
-
-    const today = new Date();
-    const eventsByDay = events?.reduce(
-      (acc, event) => {
-        const dayKey = new Date(event.start).toDateString();
-        // Remove events that are over
-        if (
-          new Date(event.start) < today ||
-          (event?.end && new Date(event.end) < today)
-        )
-          return acc;
-
-        // remove events that are not on the correct church
-        if (event.church_uuid !== church.uuid) return acc;
-        if (!acc[dayKey]) acc[dayKey] = [];
-        acc[dayKey].push(event);
-        return acc;
-      },
-      {} as Record<string, typeof events>,
-    );
-
-    return {
-      ...church,
-      website: website ? { ...website, eventsByDay } : undefined,
-    };
-  });
+  const churches = response.churches.map((church) => ({
+    ...church,
+    eventsByDay: computeEventsByDay(church.events),
+  }));
   return {
     churches,
     aggregations: response.aggregations,

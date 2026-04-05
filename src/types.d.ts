@@ -141,8 +141,28 @@ export interface components {
             start: string;
             /** End */
             end: string | null;
+            /** Schedules Indices */
+            schedules_indices: number[];
             /** Source Has Been Moderated */
             source_has_been_moderated: boolean;
+        };
+        /**
+         * FeedbackTypeEnum
+         * @enum {string}
+         */
+        FeedbackTypeEnum: "good" | "outdated" | "error" | "comment";
+        /** ReportOut */
+        ReportOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            feedback_type: components["schemas"]["FeedbackTypeEnum"];
+            /** Comment */
+            comment: string | null;
+            /** Sub Reports */
+            sub_reports: components["schemas"]["ReportOut"][];
         };
         /** SearchResult */
         SearchResult: {
@@ -162,12 +182,16 @@ export interface components {
             uuid: string;
             /** Name */
             name: string;
+            /** Home Url */
+            home_url: string;
             /** Events */
             events: components["schemas"]["EventOut"][];
             /** Has More Events */
             has_more_events: boolean;
             /** Reports Count */
             reports_count: Record<string, never>[];
+            /** Reports */
+            reports: components["schemas"]["ReportOut"][];
         };
         /** AutocompleteItem */
         AutocompleteItem: {
@@ -212,8 +236,23 @@ export interface components {
             website_uuid: string;
             /** Events */
             events: components["schemas"]["EventOut"][];
+            website: components["schemas"]["WebsiteOut"];
             /** Schedules */
             schedules: components["schemas"]["ScheduleOut"][];
+            /** Parsings */
+            parsings: components["schemas"]["ParsingOut"][];
+        };
+        /** ParsingOut */
+        ParsingOut: {
+            /**
+             * Uuid
+             * Format: uuid
+             */
+            uuid: string;
+            /** Scraping Url */
+            scraping_url: string | null;
+            /** Image Url */
+            image_url: string | null;
         };
         /** ScheduleOut */
         ScheduleOut: {

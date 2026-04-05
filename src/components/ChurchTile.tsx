@@ -28,7 +28,7 @@ const ChurchTile = ({
 }: {
   church: AggregatedSearchResults["churches"][number];
 }) => {
-  const events = church.website?.eventsByDay;
+  const events = church.eventsByDay;
   if (events === undefined || Object.keys(events).length === 0) return null;
   return (
     <Link

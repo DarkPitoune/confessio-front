@@ -468,11 +468,13 @@ L.GridLayer.include({
   }
 
   proto._transformGL = function (this: any) {
+    if (!this._maptilerMap) return;
     this._maptilerMap.setCenter(this._map.getCenter(true));
     this._maptilerMap.setZoom(this._map.getZoom() - 1);
   };
 
   proto._pinchZoom = function (this: any) {
+    if (!this._maptilerMap) return;
     this._maptilerMap.jumpTo({
       zoom: this._map.getZoom() - 1,
       center: this._map.getCenter(true),
@@ -480,6 +482,7 @@ L.GridLayer.include({
   };
 
   proto._animateZoom = function (this: any, t: any) {
+    if (!this._maptilerMap) return;
     const map = this._map;
     const scale = map.getZoomScale(t.zoom);
     const padded = map.getSize().multiplyBy(this.options.padding * scale);
@@ -499,6 +502,7 @@ L.GridLayer.include({
   };
 
   proto._transitionEnd = function (this: any) {
+    if (!this._maptilerMap) return;
     L.Util.requestAnimFrame(() => {
       const zoom = this._map.getZoom();
       const nw = getContainerBounds(this._map).getNorthWest();

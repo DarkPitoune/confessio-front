@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 
 export const ChurchMarker = ({
   map,
-  church: { uuid, latitude, longitude, website },
+  church: { uuid, latitude, longitude, eventsByDay },
   selected,
 }: {
   map: Map;
@@ -14,10 +14,9 @@ export const ChurchMarker = ({
 }) => {
   const router = useRouter();
   const markerRef = useRef<LeafletMarker | null>(null);
-  const prevSelectedRef = useRef(selected);
 
   const firstDayFirstEvent = Object.values(
-    website?.eventsByDay || {},
+    eventsByDay || {},
   )?.[0]?.[0];
   const timeLabel = firstDayFirstEvent
     ? getFrenchTimeString(firstDayFirstEvent.start)
@@ -49,8 +48,9 @@ export const ChurchMarker = ({
       })
         .addTo(map)
         .on("click", () => {
-          const currentParams = new URLSearchParams(window.location.search);
-          router.push(`/church/${uuid}?${currentParams.toString()}`);
+          const params = new URLSearchParams(window.location.search);
+          params.set("center", `${latitude},${longitude}`);
+          router.push(`/church/${uuid}?${params.toString()}`);
         });
     }
 
@@ -63,19 +63,11 @@ export const ChurchMarker = ({
   useEffect(() => {
     if (!markerRef.current) return;
     if (selected) {
-      // Only fly to the church when selected transitions from false to true,
-      // not on remount (e.g. marker re-entering viewport while already selected)
-      if (!prevSelectedRef.current) {
-        const currentZoom = map.getZoom();
-        const zoom = currentZoom < 14 ? 16 : currentZoom;
-        map.flyTo([latitude, longitude], zoom);
-      }
       markerRef.current.openPopup();
     } else {
       markerRef.current.closePopup();
     }
-    prevSelectedRef.current = selected;
-  }, [selected, map, latitude, longitude]);
+  }, [selected]);
 
   return null;
 };

@@ -74,7 +74,29 @@ const ChurchCard = ({
   const selectedDay = dayKeys[selectedDayIndex];
   const eventsForDay = selectedDay ? (eventsByDay?.[selectedDay] ?? []) : [];
 
-  const voteCount = 151; // Mocked — backend doesn't support voting yet
+  const selectedEvent = eventsForDay[selectedEventIndex];
+  const schedulesForEvent = useMemo(() => {
+    if (!churchDetails || !selectedEvent) return [];
+    const indices = new Set(selectedEvent.schedules_indices);
+    return churchDetails.schedules.filter((_, i) => indices.has(i));
+  }, [churchDetails, selectedEvent]);
+
+  const { upvotes, downvotes, comments } = useMemo(() => {
+    const reports = churchDetails?.website?.reports ?? [];
+    let up = 0;
+    let down = 0;
+    const allComments: { comment: string; created_at: string }[] = [];
+    const walk = (list: typeof reports) => {
+      for (const r of list) {
+        if (r.feedback_type === "good") up++;
+        if (r.feedback_type === "outdated" || r.feedback_type === "error") down++;
+        if (r.comment) allComments.push({ comment: r.comment, created_at: r.created_at });
+        walk(r.sub_reports);
+      }
+    };
+    walk(reports);
+    return { upvotes: up, downvotes: down, comments: allComments };
+  }, [churchDetails?.website?.reports]);
 
   const searchParams = useSearchParams();
   const query = searchParams.toString();
@@ -83,10 +105,7 @@ const ChurchCard = ({
     <>
       <div className="px-4 pt-4 pb-2 flex flex-col">
         <span className="flex justify-between gap-1 items-center">
-          <h3
-            className="text-white leading-tight"
-            style={{ fontSize: 24, fontWeight: 600 }}
-          >
+          <h3 className="text-white leading-tight text-2xl font-semibold">
             {church.name}
           </h3>
           <Link
@@ -99,27 +118,22 @@ const ChurchCard = ({
         <Link
           href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
           target="_blank"
-          className="whitespace-pre-line hover:underline"
-          style={{ fontSize: 12, fontWeight: 300, color: "#cecece" }}
+          className="whitespace-pre-line hover:underline text-xs font-light text-[#cecece]"
         >
           {[church.address, church.city].filter(Boolean).join("\n")}
         </Link>
       </div>
 
       {/* Separator — 1px, #d9d9d9 at 29% opacity */}
-      <hr
-        className="mx-0 border-0 h-px"
-        style={{ backgroundColor: "rgba(217, 217, 217, 0.29)" }}
-      />
+      <hr className="mx-0 border-0 h-px bg-[#d9d9d94a]" />
 
       <ModalSheetScroller draggableAt="top">
         {/* Parish link — white 12px semibold + external icon */}
         <div className="px-4 py-2 flex items-center gap-2">
           <Link
-            href={`https://confessio.fr/paroisse/${church.website_uuid}`}
+            href={`https://confessio.fr/paroisse/${churchDetails?.website?.uuid}`}
             target="_blank"
-            className="flex items-center gap-2 hover:underline"
-            style={{ fontSize: 12, fontWeight: 600, color: "#ffffff" }}
+            className="flex items-center gap-2 hover:underline text-xs font-semibold text-white"
           >
             <span>Paroisse de {church.name}</span>
             <ArrowSquareOutIcon size={16} color="white" className="shrink-0" />
@@ -137,13 +151,10 @@ const ChurchCard = ({
           )}
 
           {/* Day tabs + white card */}
-          {churchDetails && churchDetails.schedules.length > 0 && (
+          {churchDetails && (dayKeys.length > 0 || schedulesForEvent.length > 0) && (
             <div className="mx-3">
               {dayKeys.length > 0 && (
-                <div
-                  className="flex gap-0 overflow-x-auto snap-x snap-mandatory"
-                  style={{ paddingInline: "calc(50% - 40px)" }}
-                >
+                <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]">
                   {dayKeys.map((dayKey, i) => {
                     const { dayName, dateNum } = formatDayLabel(dayKey);
                     const isSelected = i === selectedDayIndex;
@@ -165,20 +176,8 @@ const ChurchCard = ({
                         <span>{dateNum}</span>
                         {isSelected && (
                           <>
-                            <span
-                              className="absolute bottom-0 -left-2 w-2 h-2 pointer-events-none"
-                              style={{
-                                background:
-                                  "radial-gradient(circle at 0 0, transparent 8px, white 8px)",
-                              }}
-                            />
-                            <span
-                              className="absolute bottom-0 -right-2 w-2 h-2 pointer-events-none"
-                              style={{
-                                background:
-                                  "radial-gradient(circle at 100% 0, transparent 8px, white 8px)",
-                              }}
-                            />
+                            <span className="absolute bottom-0 -left-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_0_0,transparent_8px,white_8px)]" />
+                            <span className="absolute bottom-0 -right-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_100%_0,transparent_8px,white_8px)]" />
                           </>
                         )}
                       </button>
@@ -189,10 +188,7 @@ const ChurchCard = ({
               <div className="rounded-lg bg-white overflow-hidden">
                 {/* Time slots inside card */}
                 {eventsForDay.length > 0 && (
-                  <div
-                    className="flex gap-3 py-2 overflow-x-auto snap-x snap-mandatory"
-                    style={{ paddingInline: "calc(50% - 40px)" }}
-                  >
+                  <div className="flex gap-3 py-2 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]">
                     {eventsForDay.map((event, i) => {
                       const isSelected = i === selectedEventIndex;
                       return (
@@ -207,63 +203,87 @@ const ChurchCard = ({
                     })}
                   </div>
                 )}
-                <p
-                  className="px-4 py-3 whitespace-pre-line italic text-gray-500"
-                  style={{ fontSize: 13, lineHeight: 1.6 }}
-                >
-                  {churchDetails.schedules.map((s) => s.explanation).join("\n")}
-                </p>
+                <div className="px-4 py-3 italic text-gray-500 flex flex-col gap-1 text-[13px] leading-relaxed">
+                  {schedulesForEvent.map((s, i) => {
+                    const sourceUrl = s.sources
+                      .filter((src) => src.source_type === "parsing" && src.parsing_uuid)
+                      .map((src) => churchDetails.parsings.find((p) => p.uuid === src.parsing_uuid))
+                      .find((p) => p?.scraping_url)?.scraping_url;
+                    return (
+                      <p key={i} className="whitespace-pre-line">
+                        {s.explanation}
+                        {sourceUrl && (
+                          <>
+                            {" "}
+                            <Link
+                              href={sourceUrl}
+                              target="_blank"
+                              className="not-italic font-semibold text-[#f5c542]"
+                            >
+                              [...]
+                            </Link>
+                          </>
+                        )}
+                      </p>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
 
           {/* Votes — light on dark */}
           <div className="flex items-center justify-center py-4">
-            <div
-              className="flex items-center gap-3 px-3"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.1)",
-                borderRadius: 30,
-                height: 36,
-              }}
-            >
+            <div className="flex items-center gap-3 px-3 bg-white/10 rounded-full h-9">
               <button className="flex items-center justify-center w-5 h-5">
                 <ThumbsUpIcon size={20} color="white" />
               </button>
-              <span
-                className="tabular-nums text-white"
-                style={{ fontSize: 16, fontWeight: 600 }}
-              >
-                {voteCount}
+              <span className="tabular-nums text-white text-base font-semibold">
+                {upvotes}
               </span>
-              <div
-                style={{
-                  width: 1,
-                  height: 24,
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                }}
-              />
+              <div className="w-px h-6 bg-white/20" />
+              <span className="tabular-nums text-white text-base font-semibold">
+                {downvotes}
+              </span>
               <button className="flex items-center justify-center w-5 h-5">
                 <ThumbsDownIcon size={20} color="white" />
               </button>
             </div>
           </div>
 
+          {/* Comments */}
+          {comments.length > 0 && (
+            <div className="px-4 pb-3 flex flex-col gap-2">
+              {comments.map((c, i) => (
+                <div key={i} className="flex flex-col gap-0.5">
+                  <span className="text-white/50 text-[11px]">
+                    {new Date(c.created_at).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <p className="text-white text-[13px] leading-normal">
+                    {c.comment}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Contribution link */}
-          <div className="pb-4 text-center">
+          <div className="text-center">
             <Link
-              href={`https://confessio.fr/paroisse/${church.website_uuid}`}
+              href={`https://confessio.fr/paroisse/${churchDetails?.website?.uuid}#feedbackForm`}
               target="_blank"
-              className="underline text-white/70"
-              style={{ fontSize: 14 }}
+              className="underline text-white/70 text-sm"
             >
-              Compl&eacute;ter les horaires de cette paroisse (STUB/TODO)
+              Compl&eacute;ter les horaires de cette paroisse
             </Link>
           </div>
 
           {!isLoading &&
             churchDetails &&
-            churchDetails.schedules.length === 0 &&
             dayKeys.length === 0 && (
               <p className="text-center text-gray-500 py-6 text-sm">
                 Aucun horaire disponible

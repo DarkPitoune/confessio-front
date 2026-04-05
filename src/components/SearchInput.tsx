@@ -4,7 +4,6 @@ import { Map } from "leaflet";
 import Image from "next/image";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { NavigationModal } from "./NavigationModal";
-import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useAtom } from "jotai";
 import { isSearchFocusedAtom } from "@/atoms";
@@ -171,13 +170,20 @@ export const SearchInput = ({
               return (
                 <li key={index} className="p-2 text-black divide-gray-600">
                   {item.type === "church" && item.uuid ? (
-                    <Link
-                      href={`/church/${item.uuid}`}
+                    <button
                       onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        inputRef.current?.blur();
+                        const params = new URLSearchParams(window.location.search);
+                        if (item.latitude && item.longitude) {
+                          params.set("center", `${item.latitude},${item.longitude}`);
+                        }
+                        router.push(`/church/${item.uuid}?${params.toString()}`);
+                      }}
                       className={className}
                     >
                       {inner}
-                    </Link>
+                    </button>
                   ) : (
                     <button
                       onMouseDown={(e) => e.preventDefault()}

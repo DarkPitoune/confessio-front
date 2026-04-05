@@ -1,5 +1,5 @@
 import { components } from "@/types";
-import { AggregatedSearchResults, Bounds, fetchApi, MAP_TILER_API_KEY, MOBILE_BREAKPOINT } from "@/utils";
+import { AggregatedSearchResults, Bounds, computeEventsByDay, fetchApi, MAP_TILER_API_KEY, MOBILE_BREAKPOINT } from "@/utils";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import L, { Map as LeafletMap } from "leaflet";
 import "leaflet-defaulticon-compatibility";
@@ -7,7 +7,7 @@ import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import "@/lib/leaflet-active-area";
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ChurchMarker, AggregationMarker, CurrentPositionMarker } from "./Markers";
 
@@ -37,15 +37,21 @@ const Map = ({
   const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
 
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const selectedChurchUuid = pathname?.match(/\/church\/([^/]+)/)?.[1];
+  const centerParam = searchParams.get("center");
 
-  // Fetch selected church details to center map when no bounds are provided
+  const selectedChurchInResults = searchResults?.churches.some(
+    (c) => c.uuid === selectedChurchUuid,
+  );
+
+  // Fetch selected church details to center map and ensure marker stays visible
   const { data: selectedChurchDetails } = useQuery<
     components["schemas"]["ChurchDetails"]
   >({
     queryKey: ["churchDetails", selectedChurchUuid],
     queryFn: () => fetchApi(`/church/${selectedChurchUuid}`),
-    enabled: !!selectedChurchUuid && !initialBounds,
+    enabled: !!selectedChurchUuid,
   });
 
   useEffect(() => {
@@ -56,6 +62,18 @@ const Map = ({
       );
     }
   }, [selectedChurchDetails, initialBounds]);
+
+  // Center map when a ?center=lat,lng param is present (from search/marker click)
+  useEffect(() => {
+    if (!centerParam || !mapInstanceRef.current) return;
+    const parts = centerParam.split(",").map(Number);
+    const lat = parts[0];
+    const lng = parts[1];
+    if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng))
+      return;
+    const currentZoom = mapInstanceRef.current.getZoom();
+    mapInstanceRef.current.setView([lat, lng], Math.max(currentZoom, 16));
+  }, [centerParam]);
 
   // Values match ModalSheet width (desktop) and collapsed snap point (mobile)
   const getActiveAreaStyles = useCallback((): Partial<CSSStyleDeclaration> => {
@@ -89,9 +107,21 @@ const Map = ({
       map.setActiveArea(getActiveAreaStyles());
       setMap(map);
 
-      new MaptilerLayer({
-        apiKey: MAP_TILER_API_KEY || "",
-      }).addTo(map);
+      // Expose map instance for E2E testing
+      if (process.env.NODE_ENV !== "production") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any).__map = map;
+      }
+
+      // MaptilerLayer requires WebGL2 — check support before creating the
+      // layer to avoid a partially-added zombie instance that crashes on events
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl2");
+      if (gl) {
+        new MaptilerLayer({
+          apiKey: MAP_TILER_API_KEY || "",
+        }).addTo(map);
+      }
     }
   }, [setMap, initialBounds, getActiveAreaStyles]);
 
@@ -127,6 +157,17 @@ const Map = ({
               selected={church.uuid === selectedChurchUuid}
             />
           ))}
+          {selectedChurchDetails && !selectedChurchInResults && (
+            <ChurchMarker
+              key={selectedChurchDetails.uuid}
+              map={mapInstance}
+              church={{
+                ...selectedChurchDetails,
+                eventsByDay: computeEventsByDay(selectedChurchDetails.events),
+              }}
+              selected
+            />
+          )}
           {searchResults?.aggregations.map((aggregation) => (
             <AggregationMarker
               key={getAggregationUuid(aggregation)}

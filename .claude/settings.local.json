@@ -20,7 +20,11 @@
       "Bash(pnpm outdated:*)",
       "Bash(pnpm tsc:*)",
       "mcp__penpot__execute_code",
-      "mcp__penpot__export_shape"
+      "mcp__penpot__export_shape",
+      "Bash(npm list:*)",
+      "Bash(git worktree:*)",
+      "Bash(pnpm add:*)",
+      "Bash(grep -rl touchAction /Users/pierre.dhebrail/Documents/perso/confessio-bottom-sheet/node_modules/.pnpm/motion@*/node_modules/motion/)"
     ],
     "deny": [],
     "ask": []
