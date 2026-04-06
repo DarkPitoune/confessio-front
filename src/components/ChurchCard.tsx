@@ -4,7 +4,7 @@ import Link from "next/link";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import { fetchApi, getFrenchTimeString } from "@/utils";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowSquareOutIcon,
   CircleNotchIcon,
@@ -53,7 +53,6 @@ const ChurchCard = ({
   const eventsByDay = useMemo(() => {
     const events =
       churchDetails?.events
-        .filter((e) => new Date(e.start) > new Date())
         .sort(
           (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
         ) ?? [];
@@ -101,6 +100,14 @@ const ChurchCard = ({
   const searchParams = useSearchParams();
   const query = searchParams.toString();
 
+  useEffect(() => {
+    const prev = document.title;
+    document.title = `${church.name} — Confessio`;
+    return () => {
+      document.title = prev;
+    };
+  }, [church.name]);
+
   return (
     <>
       <div className="px-4 pt-4 pb-2 flex flex-col">
@@ -129,16 +136,18 @@ const ChurchCard = ({
 
       <ModalSheetScroller draggableAt="top">
         {/* Parish link — white 12px semibold + external icon */}
-        <div className="px-4 py-2 flex items-center gap-2">
-          <Link
-            href={`https://confessio.fr/paroisse/${churchDetails?.website?.uuid}`}
-            target="_blank"
-            className="flex items-center gap-2 hover:underline text-xs font-semibold text-white"
-          >
-            <span>Paroisse de {church.name}</span>
-            <ArrowSquareOutIcon size={16} color="white" className="shrink-0" />
-          </Link>
-        </div>
+        {churchDetails?.website?.home_url && (
+          <div className="px-4 py-2 flex items-center gap-2">
+            <Link
+              href={churchDetails.website.home_url}
+              target="_blank"
+              className="flex items-center gap-2 hover:underline text-xs font-semibold text-white"
+            >
+              <span>Paroisse de {church.name}</span>
+              <ArrowSquareOutIcon size={16} color="white" className="shrink-0" />
+            </Link>
+          </div>
+        )}
         <div className="pb-5">
           {isLoading && (
             <div className="flex items-center justify-center py-8">
@@ -154,7 +163,7 @@ const ChurchCard = ({
           {churchDetails && (dayKeys.length > 0 || schedulesForEvent.length > 0) && (
             <div className="mx-3">
               {dayKeys.length > 0 && (
-                <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]">
+                <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)] scrollbar-hide">
                   {dayKeys.map((dayKey, i) => {
                     const { dayName, dateNum } = formatDayLabel(dayKey);
                     const isSelected = i === selectedDayIndex;
@@ -188,7 +197,7 @@ const ChurchCard = ({
               <div className="rounded-lg bg-white overflow-hidden">
                 {/* Time slots inside card */}
                 {eventsForDay.length > 0 && (
-                  <div className="flex gap-3 py-2 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]">
+                  <div className={`flex gap-3 py-2 ${eventsForDay.length > 2 ? "overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]" : "justify-center"}`}>
                     {eventsForDay.map((event, i) => {
                       const isSelected = i === selectedEventIndex;
                       return (
@@ -213,16 +222,13 @@ const ChurchCard = ({
                       <p key={i} className="whitespace-pre-line">
                         {s.explanation}
                         {sourceUrl && (
-                          <>
-                            {" "}
-                            <Link
-                              href={sourceUrl}
-                              target="_blank"
-                              className="not-italic font-semibold text-[#f5c542]"
-                            >
-                              [...]
-                            </Link>
-                          </>
+                          <Link
+                            href={sourceUrl}
+                            target="_blank"
+                            className="not-italic text-gray-400 block text-right text-sm mt-1"
+                          >
+                            Source <span className="text-lg">↗</span>
+                          </Link>
                         )}
                       </p>
                     );
@@ -255,8 +261,8 @@ const ChurchCard = ({
           {comments.length > 0 && (
             <div className="px-4 pb-3 flex flex-col gap-2">
               {comments.map((c, i) => (
-                <div key={i} className="flex flex-col gap-0.5">
-                  <span className="text-white/50 text-[11px]">
+                <div key={i} className="bg-white/10 rounded-2xl px-3 py-2 flex flex-col gap-0.5">
+                  <span className="text-white/40 text-[11px]">
                     {new Date(c.created_at).toLocaleDateString("fr-FR", {
                       day: "numeric",
                       month: "long",

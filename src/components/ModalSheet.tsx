@@ -65,6 +65,10 @@ function ModalSheet({
               {displayedSearchResults?.churches?.map((church) => (
                 <ChurchTile key={church.uuid} church={church} />
               ))}
+              <div className="flex items-center justify-center gap-2 py-4">
+                <span className="text-white text-xs">Un projet généreusement encouragé par</span>
+                <img src="/hozana-logo-white.png" alt="Hozana" className="h-4" />
+              </div>
             </div>
           </ModalSheetScroller>
         </>

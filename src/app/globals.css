@@ -30,6 +30,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Leaflet overrides */
 .leaflet-popup-content {
   display: flex;
@@ -75,7 +84,12 @@ body {
 
 .empty-church-marker {
   background-color: #97beff !important; /* override leaflet default */
-  border-radius: 5px;
+  border-radius: 9999px;
+}
+
+.empty-church-marker-selected {
+  background-color: var(--color-deepblue) !important;
+  border-radius: 9999px;
 }
 
 .church-marker {

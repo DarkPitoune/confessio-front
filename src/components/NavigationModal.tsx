@@ -70,6 +70,10 @@ const NavigationModal = ({
           <br />
           Made in 🇫🇷 with ✝️ without 🍪
         </p>
+        <div className="flex flex-col items-center justify-center gap-2">
+          <span className="text-xs text-gray-300">Un projet généreusement encouragé par</span>
+          <img src="/hozana-logo-white.png" alt="Hozana" className="h-7" />
+        </div>
       </div>
     </div>
   );

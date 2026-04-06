@@ -36,8 +36,8 @@ export const computeEventsByDay = (
 
   const eventsByDay: Record<string, components["schemas"]["EventOut"][]> = {};
   for (const event of sorted) {
-    if (new Date(event.start) < today) continue;
-    if (event.end && new Date(event.end) < today) continue;
+    const end = event.end ? new Date(event.end) : new Date(event.start);
+    if (end < today) continue;
     const dayKey = new Date(event.start).toDateString();
     if (!eventsByDay[dayKey]) eventsByDay[dayKey] = [];
     eventsByDay[dayKey].push(event);

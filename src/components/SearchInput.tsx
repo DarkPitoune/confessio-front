@@ -52,13 +52,16 @@ export const SearchInput = ({
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isFocused, closeSearch]);
 
-  const onClick = (item: components["schemas"]["AutocompleteItem"]) => () => {
-    if (map && item.latitude && item.longitude) {
-      const zoomLevel = item.type === "municipality" ? 13 : 15;
-      map.setView([item.latitude, item.longitude], zoomLevel);
-      inputRef.current?.blur();
-    }
-  };
+  const onClick = useCallback(
+    (item: components["schemas"]["AutocompleteItem"]) => () => {
+      if (map && item.latitude && item.longitude) {
+        const zoomLevel = item.type === "municipality" ? 13 : 15;
+        map.setView([item.latitude, item.longitude], zoomLevel);
+        inputRef.current?.blur();
+      }
+    },
+    [map],
+  );
   const onInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       setSearchQuery(e.target.value);
@@ -71,13 +74,34 @@ export const SearchInput = ({
     [setSearchQuery, pathname, router],
   );
 
+  const filteredData = data.filter((item) => item.type !== "parish");
+
+  const selectFirstResult = useCallback(() => {
+    const first = filteredData[0];
+    if (!first) return;
+    if (first.type === "church" && first.uuid) {
+      inputRef.current?.blur();
+      const params = new URLSearchParams(window.location.search);
+      if (first.latitude && first.longitude) {
+        params.set("center", `${first.latitude},${first.longitude}`);
+      }
+      router.push(`/church/${first.uuid}?${params.toString()}`);
+    } else {
+      onClick(first)();
+    }
+  }, [filteredData, router, onClick]);
+
+  const hasResults = searchQuery.length > 0 && (data.length > 0 || isLoading);
+
   return (
     <>
       <div
         className={clsx([
           "absolute flex flex-col items-stretch justify-start z-40 md:w-[468px] md:rounded-3xl md:inset-x-4 md:top-4",
           isFocused
-            ? "inset-0 bg-white pt-4 px-4 md:bg-transparent md:p-0 md:bottom-4 md:h-auto"
+            ? hasResults
+              ? "inset-x-0 top-0 bg-white pt-4 px-4 max-h-[80vh] md:bg-transparent md:p-0 md:max-h-none"
+              : "inset-0 bg-white pt-4 px-4 md:bg-transparent md:p-0 md:bottom-4 md:h-auto"
             : "inset-x-4 top-4 rounded-3xl",
         ])}
       >
@@ -111,6 +135,12 @@ export const SearchInput = ({
             placeholder="Chercher une église ou une ville"
             value={searchQuery}
             onChange={onInputChange}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                selectFirstResult();
+              }
+            }}
             onFocus={() => {
               setIsFocused(true);
               history.pushState({ search: true }, "");
@@ -140,8 +170,8 @@ export const SearchInput = ({
         </div>
         <ul
           className={clsx(
-            "min-h-0 overflow-y-auto bg-white rounded-b-3xl flex-1 -mt-5 pt-5",
-            { hidden: !isFocused },
+            "min-h-0 overflow-y-auto bg-white rounded-b-3xl -mt-5 pt-5",
+            { hidden: !isFocused, "flex-1": !hasResults },
           )}
         >
           {isFocused && data.length === 0 && !isLoading && (
@@ -154,7 +184,7 @@ export const SearchInput = ({
             </li>
           )}
           {isFocused &&
-            data.filter((item) => item.type !== "parish").map((item, index) => {
+            filteredData.map((item, index) => {
               const ItemIcon = mapItemTypeToIcon[item.type] ?? BuildingsIcon;
               const inner = (
                 <>
