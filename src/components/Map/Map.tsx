@@ -94,13 +94,12 @@ const Map = ({
       };
 
       const map = L.map(mapRef.current, {
-        center: [
-          (startingBounds.north + startingBounds.south) / 2,
-          (startingBounds.west + startingBounds.east) / 2,
-        ],
-        zoom: 14,
         zoomControl: false,
       });
+      map.fitBounds([
+        [startingBounds.south, startingBounds.west],
+        [startingBounds.north, startingBounds.east],
+      ]);
 
       mapInstanceRef.current = map;
       setMapInstance(map);

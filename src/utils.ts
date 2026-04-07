@@ -110,6 +110,31 @@ export const getConfessionTimeString = ({
     ? `à ${getFrenchTimeString(start)}`
     : `de ${getFrenchTimeString(start)} à ${getFrenchTimeString(end)}`;
 
+export const fetchDioceses = async (): Promise<
+  components["schemas"]["DioceseOut"][]
+> => {
+  return fetchApi("/dioceses");
+};
+
+export const fetchDioceseBySlug = async (
+  slug: string,
+): Promise<components["schemas"]["DioceseOut"] | null> => {
+  const dioceses = await fetchDioceses();
+  return dioceses.find((d) => d.slug === slug) ?? null;
+};
+
+export const dioceseToBounds = (
+  diocese: components["schemas"]["DioceseOut"],
+): Bounds => ({
+  south: diocese.min_latitude,
+  north: diocese.max_latitude,
+  west: diocese.min_longitude,
+  east: diocese.max_longitude,
+});
+
+export const boundsToString = (bounds: Bounds): string =>
+  `${bounds.south.toFixed(6)},${bounds.west.toFixed(6)},${bounds.north.toFixed(6)},${bounds.east.toFixed(6)}`;
+
 export const parseBoundsParam = (boundsParam: string | null): Bounds | null => {
   if (!boundsParam) return null;
 

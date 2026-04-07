@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { SearchInput } from "@/components/SearchInput";
 import { components } from "@/types";
-import { fetchApi, parseBoundsParam } from "@/utils";
+import { type Bounds, fetchApi, parseBoundsParam } from "@/utils";
 import { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { Map as LeafletMap } from "leaflet";
@@ -24,12 +24,16 @@ const Map = dynamic(() => import("../../components/Map/Map"), {
   ssr: false,
 });
 
-function HomePage() {
+export function HomePage({
+  serverBounds,
+}: {
+  serverBounds?: Bounds | null;
+} = {}) {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { setBounds } = useMapBounds();
   const searchParams = useSearchParams();
-  const initialBounds = parseBoundsParam(searchParams.get("bounds"));
+  const initialBounds = serverBounds ?? parseBoundsParam(searchParams.get("bounds"));
 
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
@@ -38,15 +42,6 @@ function HomePage() {
     longitude: number;
   } | null>(null);
 
-  // Ask for geolocation on first load when no bounds in URL
-  useEffect(() => {
-    if (!initialBounds && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        setCurrentPosition({ latitude, longitude });
-      });
-    }
-  }, [initialBounds]);
 
   const { data, isLoading, isFetching } = useQuery<
     components["schemas"]["AutocompleteItem"][]

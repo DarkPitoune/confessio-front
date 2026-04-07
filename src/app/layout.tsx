@@ -1,9 +1,9 @@
-"use client";
-
 import { Geist, Geist_Mono } from "next/font/google";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Providers from "@/components/Providers";
 import "./globals.css";
 import clsx from "clsx";
+import type { Metadata } from "next";
+import { WEBSITE_JSONLD } from "@/lib/jsonld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +15,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const queryClient = new QueryClient();
+export const metadata: Metadata = {
+  metadataBase: new URL("https://new.confessio.fr"),
+  title: "Confessio — Trouver une confession près de chez vous",
+  description:
+    "Trouvez les horaires de confession catholique près de chez vous. Lieux, horaires et informations pratiques.",
+  icons: { icon: "/favicon.svg" },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Confessio",
+  },
+  twitter: {
+    card: "summary",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content" as const,
+};
 
 export default function RootLayout({
+  children,
   map,
   modal,
 }: Readonly<{
@@ -26,19 +47,19 @@ export default function RootLayout({
   modal: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <title>Confessio — Trouver une confession près de chez vous</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-      </head>
+    <html lang="fr">
       <body
         className={clsx(geistSans.variable, geistMono.variable, "antialiased")}
       >
-        <QueryClientProvider client={queryClient}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
+        />
+        <Providers>
+          {children}
           {modal}
           {map}
-        </QueryClientProvider>
+        </Providers>
       </body>
     </html>
   );

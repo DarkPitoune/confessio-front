@@ -68,17 +68,15 @@ const ChurchCard = ({
   const dayKeys = useMemo(() => Object.keys(eventsByDay), [eventsByDay]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [selectedEventIndex, setSelectedEventIndex] = useState(0);
 
   const selectedDay = dayKeys[selectedDayIndex];
   const eventsForDay = selectedDay ? (eventsByDay?.[selectedDay] ?? []) : [];
 
-  const selectedEvent = eventsForDay[selectedEventIndex];
-  const schedulesForEvent = useMemo(() => {
-    if (!churchDetails || !selectedEvent) return [];
-    const indices = new Set(selectedEvent.schedules_indices);
+  const getSchedulesForEvent = (event: EventOut) => {
+    if (!churchDetails) return [];
+    const indices = new Set(event.schedules_indices);
     return churchDetails.schedules.filter((_, i) => indices.has(i));
-  }, [churchDetails, selectedEvent]);
+  };
 
   const { upvotes, downvotes, comments } = useMemo(() => {
     const reports = churchDetails?.website?.reports ?? [];
@@ -185,7 +183,7 @@ const ChurchCard = ({
 
           {/* Day tabs + white card */}
           {churchDetails &&
-            (dayKeys.length > 0 || schedulesForEvent.length > 0) && (
+            dayKeys.length > 0 && (
               <div className="mx-3">
                 {dayKeys.length > 0 && (
                   <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)] scrollbar-hide">
@@ -197,7 +195,6 @@ const ChurchCard = ({
                           key={dayKey}
                           onClick={(e) => {
                             setSelectedDayIndex(i);
-                            setSelectedEventIndex(0);
                             e.currentTarget.scrollIntoView({
                               behavior: "smooth",
                               inline: "center",
@@ -220,54 +217,45 @@ const ChurchCard = ({
                   </div>
                 )}
                 <div className="rounded-lg bg-white overflow-hidden">
-                  {/* Time slots inside card */}
-                  {eventsForDay.length > 0 && (
-                    <div
-                      className={`flex gap-3 py-2 ${eventsForDay.length > 2 ? "overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]" : "justify-center"}`}
-                    >
-                      {eventsForDay.map((event, i) => {
-                        const isSelected = i === selectedEventIndex;
-                        return (
-                          <button
-                            key={`${event.start}-${i}`}
-                            onClick={() => setSelectedEventIndex(i)}
-                            className={`shrink-0 snap-center rounded-full px-4 py-1.5 text-base font-semibold ${isSelected ? "bg-deepblue text-white" : "bg-gray-100 text-gray-400"}`}
-                          >
-                            {formatTimeRange(event)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                  <div className="px-4 py-3 italic text-gray-500 flex flex-col gap-1 text-[13px] leading-relaxed">
-                    {schedulesForEvent.map((s, i) => {
-                      const sourceUrl = s.sources
-                        .filter(
-                          (src) =>
-                            src.source_type === "parsing" && src.parsing_uuid,
-                        )
-                        .map((src) =>
-                          churchDetails.parsings.find(
-                            (p) => p.uuid === src.parsing_uuid,
-                          ),
-                        )
-                        .find((p) => p?.scraping_url)?.scraping_url;
-                      return (
-                        <p key={i} className="whitespace-pre-line">
-                          {s.explanation}
-                          {sourceUrl && (
-                            <Link
-                              href={sourceUrl}
-                              target="_blank"
-                              className="not-italic text-gray-400 block text-right text-sm mt-1"
-                            >
-                              Source <span className="text-lg">↗</span>
-                            </Link>
-                          )}
-                        </p>
-                      );
-                    })}
-                  </div>
+                  {eventsForDay.map((event, i) => {
+                    const schedules = getSchedulesForEvent(event);
+                    return (
+                      <div key={`${event.start}-${i}`} className="px-4 py-3 text-center">
+                        <span className="inline-block rounded-full px-4 py-1.5 text-base font-semibold bg-deepblue text-white">
+                          {formatTimeRange(event)}
+                        </span>
+                        <div className="italic text-gray-500 flex flex-col gap-1 text-[13px] leading-relaxed mt-1 text-left">
+                          {schedules.map((s, j) => {
+                            const sourceUrl = s.sources
+                              .filter(
+                                (src) =>
+                                  src.source_type === "parsing" && src.parsing_uuid,
+                              )
+                              .map((src) =>
+                                churchDetails.parsings.find(
+                                  (p) => p.uuid === src.parsing_uuid,
+                                ),
+                              )
+                              .find((p) => p?.scraping_url)?.scraping_url;
+                            return (
+                              <p key={j} className="whitespace-pre-line">
+                                {s.explanation}
+                                {sourceUrl && (
+                                  <Link
+                                    href={sourceUrl}
+                                    target="_blank"
+                                    className="not-italic text-gray-400 block text-right text-sm mt-1"
+                                  >
+                                    Source <span className="text-lg">↗</span>
+                                  </Link>
+                                )}
+                              </p>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

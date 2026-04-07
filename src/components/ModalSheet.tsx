@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { SheetRef } from "react-modal-sheet";
 import { ChurchCard } from "./ChurchCard";
@@ -68,7 +69,7 @@ function ModalSheet({
               <div className="flex items-center justify-center gap-2 py-4">
                 <span className="text-white text-xs">Un projet généreusement encouragé par</span>
                 <a href="https://hozana.org" target="_blank" rel="noopener noreferrer">
-                  <img src="/hozana-logo-white.png" alt="Hozana" className="h-4" />
+                  <Image src="/hozana-logo-white.png" alt="Hozana" height={16} width={64} />
                 </a>
               </div>
             </div>

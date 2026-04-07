@@ -73,7 +73,7 @@ const NavigationModal = ({
         <div className="flex flex-col items-center justify-center gap-2">
           <span className="text-xs text-gray-300">Un projet généreusement encouragé par</span>
           <a href="https://hozana.org" target="_blank" rel="noopener noreferrer">
-            <img src="/hozana-logo-white.png" alt="Hozana" className="h-7" />
+            <Image src="/hozana-logo-white.png" alt="Hozana" height={28} width={112} />
           </a>
         </div>
       </div>
