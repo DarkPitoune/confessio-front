@@ -67,7 +67,9 @@ function ModalSheet({
               ))}
               <div className="flex items-center justify-center gap-2 py-4">
                 <span className="text-white text-xs">Un projet généreusement encouragé par</span>
-                <img src="/hozana-logo-white.png" alt="Hozana" className="h-4" />
+                <a href="https://hozana.org" target="_blank" rel="noopener noreferrer">
+                  <img src="/hozana-logo-white.png" alt="Hozana" className="h-4" />
+                </a>
               </div>
             </div>
           </ModalSheetScroller>

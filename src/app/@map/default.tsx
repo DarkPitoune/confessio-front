@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { useMapBounds } from "@/hooks/useMapBounds";
 import { useSearchResults } from "@/hooks/useSearchResults";
 import { useSearchParams } from "next/navigation";
+import posthog from "posthog-js";
 
 const Map = dynamic(() => import("../../components/Map/Map"), {
   loading: () => (
@@ -85,6 +86,7 @@ function HomePage() {
 
   const handleCenterOnMe = () => {
     if (map) {
+      posthog.capture("center_on_me_clicked");
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
         setCurrentPosition({ latitude, longitude });
@@ -97,7 +99,12 @@ function HomePage() {
     <>
       <SearchInput
         map={map}
-        isLoading={isLoading || isFetching || isSearchResultsFetching || searchQuery !== debouncedSearchQuery}
+        isLoading={
+          isLoading ||
+          isFetching ||
+          isSearchResultsFetching ||
+          searchQuery !== debouncedSearchQuery
+        }
         data={data || []}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}

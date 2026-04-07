@@ -5,6 +5,7 @@ import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import { fetchApi, getFrenchTimeString } from "@/utils";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import posthog from "posthog-js";
 import {
   ArrowSquareOutIcon,
   CircleNotchIcon,
@@ -52,10 +53,9 @@ const ChurchCard = ({
 
   const eventsByDay = useMemo(() => {
     const events =
-      churchDetails?.events
-        .sort(
-          (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
-        ) ?? [];
+      churchDetails?.events.sort(
+        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+      ) ?? [];
     const byDay: Record<string, EventOut[]> = {};
     for (const event of events) {
       const key = new Date(event.start).toDateString();
@@ -88,8 +88,10 @@ const ChurchCard = ({
     const walk = (list: typeof reports) => {
       for (const r of list) {
         if (r.feedback_type === "good") up++;
-        if (r.feedback_type === "outdated" || r.feedback_type === "error") down++;
-        if (r.comment) allComments.push({ comment: r.comment, created_at: r.created_at });
+        if (r.feedback_type === "outdated" || r.feedback_type === "error")
+          down++;
+        if (r.comment)
+          allComments.push({ comment: r.comment, created_at: r.created_at });
         walk(r.sub_reports);
       }
     };
@@ -103,10 +105,15 @@ const ChurchCard = ({
   useEffect(() => {
     const prev = document.title;
     document.title = `${church.name} — Confessio`;
+    posthog.capture("church_viewed", {
+      church_uuid: church.uuid,
+      church_name: church.name,
+      church_city: church.city,
+    });
     return () => {
       document.title = prev;
     };
-  }, [church.name]);
+  }, [church.name, church.uuid, church.city]);
 
   return (
     <>
@@ -126,6 +133,12 @@ const ChurchCard = ({
           href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
           target="_blank"
           className="whitespace-pre-line hover:underline text-xs font-light text-[#cecece]"
+          onClick={() =>
+            posthog.capture("directions_opened", {
+              church_uuid: church.uuid,
+              church_name: church.name,
+            })
+          }
         >
           {[church.address, church.city].filter(Boolean).join("\n")}
         </Link>
@@ -142,9 +155,20 @@ const ChurchCard = ({
               href={churchDetails.website.home_url}
               target="_blank"
               className="flex items-center gap-2 hover:underline text-xs font-semibold text-white"
+              onClick={() =>
+                posthog.capture("parish_website_clicked", {
+                  church_uuid: church.uuid,
+                  church_name: church.name,
+                  parish_url: churchDetails.website?.home_url,
+                })
+              }
             >
               <span>Paroisse de {church.name}</span>
-              <ArrowSquareOutIcon size={16} color="white" className="shrink-0" />
+              <ArrowSquareOutIcon
+                size={16}
+                color="white"
+                className="shrink-0"
+              />
             </Link>
           </div>
         )}
@@ -160,88 +184,106 @@ const ChurchCard = ({
           )}
 
           {/* Day tabs + white card */}
-          {churchDetails && (dayKeys.length > 0 || schedulesForEvent.length > 0) && (
-            <div className="mx-3">
-              {dayKeys.length > 0 && (
-                <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)] scrollbar-hide">
-                  {dayKeys.map((dayKey, i) => {
-                    const { dayName, dateNum } = formatDayLabel(dayKey);
-                    const isSelected = i === selectedDayIndex;
-                    return (
-                      <button
-                        key={dayKey}
-                        onClick={(e) => {
-                          setSelectedDayIndex(i);
-                          setSelectedEventIndex(0);
-                          e.currentTarget.scrollIntoView({
-                            behavior: "smooth",
-                            inline: "center",
-                            block: "nearest",
-                          });
-                        }}
-                        className={`relative flex flex-col items-center shrink-0 snap-center px-3 pt-0.5 pb-1.5 text-[15px] font-semibold leading-snug rounded-t-lg ${isSelected ? "bg-white text-black" : "bg-transparent text-white/50"}`}
-                      >
-                        <span>{dayName}</span>
-                        <span>{dateNum}</span>
-                        {isSelected && (
-                          <>
-                            <span className="absolute bottom-0 -left-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_0_0,transparent_8px,white_8px)]" />
-                            <span className="absolute bottom-0 -right-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_100%_0,transparent_8px,white_8px)]" />
-                          </>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="rounded-lg bg-white overflow-hidden">
-                {/* Time slots inside card */}
-                {eventsForDay.length > 0 && (
-                  <div className={`flex gap-3 py-2 ${eventsForDay.length > 2 ? "overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]" : "justify-center"}`}>
-                    {eventsForDay.map((event, i) => {
-                      const isSelected = i === selectedEventIndex;
+          {churchDetails &&
+            (dayKeys.length > 0 || schedulesForEvent.length > 0) && (
+              <div className="mx-3">
+                {dayKeys.length > 0 && (
+                  <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)] scrollbar-hide">
+                    {dayKeys.map((dayKey, i) => {
+                      const { dayName, dateNum } = formatDayLabel(dayKey);
+                      const isSelected = i === selectedDayIndex;
                       return (
                         <button
-                          key={`${event.start}-${i}`}
-                          onClick={() => setSelectedEventIndex(i)}
-                          className={`shrink-0 snap-center rounded-full px-4 py-1.5 text-base font-semibold ${isSelected ? "bg-deepblue text-white" : "bg-gray-100 text-gray-400"}`}
+                          key={dayKey}
+                          onClick={(e) => {
+                            setSelectedDayIndex(i);
+                            setSelectedEventIndex(0);
+                            e.currentTarget.scrollIntoView({
+                              behavior: "smooth",
+                              inline: "center",
+                              block: "nearest",
+                            });
+                          }}
+                          className={`relative flex flex-col items-center shrink-0 snap-center px-3 pt-0.5 pb-1.5 text-[15px] font-semibold leading-snug rounded-t-lg ${isSelected ? "bg-white text-black" : "bg-transparent text-white/50"}`}
                         >
-                          {formatTimeRange(event)}
+                          <span>{dayName}</span>
+                          <span>{dateNum}</span>
+                          {isSelected && (
+                            <>
+                              <span className="absolute bottom-0 -left-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_0_0,transparent_8px,white_8px)]" />
+                              <span className="absolute bottom-0 -right-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_100%_0,transparent_8px,white_8px)]" />
+                            </>
+                          )}
                         </button>
                       );
                     })}
                   </div>
                 )}
-                <div className="px-4 py-3 italic text-gray-500 flex flex-col gap-1 text-[13px] leading-relaxed">
-                  {schedulesForEvent.map((s, i) => {
-                    const sourceUrl = s.sources
-                      .filter((src) => src.source_type === "parsing" && src.parsing_uuid)
-                      .map((src) => churchDetails.parsings.find((p) => p.uuid === src.parsing_uuid))
-                      .find((p) => p?.scraping_url)?.scraping_url;
-                    return (
-                      <p key={i} className="whitespace-pre-line">
-                        {s.explanation}
-                        {sourceUrl && (
-                          <Link
-                            href={sourceUrl}
-                            target="_blank"
-                            className="not-italic text-gray-400 block text-right text-sm mt-1"
+                <div className="rounded-lg bg-white overflow-hidden">
+                  {/* Time slots inside card */}
+                  {eventsForDay.length > 0 && (
+                    <div
+                      className={`flex gap-3 py-2 ${eventsForDay.length > 2 ? "overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)]" : "justify-center"}`}
+                    >
+                      {eventsForDay.map((event, i) => {
+                        const isSelected = i === selectedEventIndex;
+                        return (
+                          <button
+                            key={`${event.start}-${i}`}
+                            onClick={() => setSelectedEventIndex(i)}
+                            className={`shrink-0 snap-center rounded-full px-4 py-1.5 text-base font-semibold ${isSelected ? "bg-deepblue text-white" : "bg-gray-100 text-gray-400"}`}
                           >
-                            Source <span className="text-lg">↗</span>
-                          </Link>
-                        )}
-                      </p>
-                    );
-                  })}
+                            {formatTimeRange(event)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="px-4 py-3 italic text-gray-500 flex flex-col gap-1 text-[13px] leading-relaxed">
+                    {schedulesForEvent.map((s, i) => {
+                      const sourceUrl = s.sources
+                        .filter(
+                          (src) =>
+                            src.source_type === "parsing" && src.parsing_uuid,
+                        )
+                        .map((src) =>
+                          churchDetails.parsings.find(
+                            (p) => p.uuid === src.parsing_uuid,
+                          ),
+                        )
+                        .find((p) => p?.scraping_url)?.scraping_url;
+                      return (
+                        <p key={i} className="whitespace-pre-line">
+                          {s.explanation}
+                          {sourceUrl && (
+                            <Link
+                              href={sourceUrl}
+                              target="_blank"
+                              className="not-italic text-gray-400 block text-right text-sm mt-1"
+                            >
+                              Source <span className="text-lg">↗</span>
+                            </Link>
+                          )}
+                        </p>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Votes — light on dark */}
           <div className="flex items-center justify-center py-4">
             <div className="flex items-center gap-3 px-3 bg-white/10 rounded-full h-9">
-              <button className="flex items-center justify-center w-5 h-5">
+              <button
+                className="flex items-center justify-center w-5 h-5"
+                onClick={() =>
+                  posthog.capture("church_upvoted", {
+                    church_uuid: church.uuid,
+                    church_name: church.name,
+                  })
+                }
+              >
                 <ThumbsUpIcon size={20} color="white" />
               </button>
               <span className="tabular-nums text-white text-base font-semibold">
@@ -251,7 +293,15 @@ const ChurchCard = ({
               <span className="tabular-nums text-white text-base font-semibold">
                 {downvotes}
               </span>
-              <button className="flex items-center justify-center w-5 h-5">
+              <button
+                className="flex items-center justify-center w-5 h-5"
+                onClick={() =>
+                  posthog.capture("church_downvoted", {
+                    church_uuid: church.uuid,
+                    church_name: church.name,
+                  })
+                }
+              >
                 <ThumbsDownIcon size={20} color="white" />
               </button>
             </div>
@@ -261,7 +311,10 @@ const ChurchCard = ({
           {comments.length > 0 && (
             <div className="px-4 pb-3 flex flex-col gap-2">
               {comments.map((c, i) => (
-                <div key={i} className="bg-white/10 rounded-2xl px-3 py-2 flex flex-col gap-0.5">
+                <div
+                  key={i}
+                  className="bg-white/10 rounded-2xl px-3 py-2 flex flex-col gap-0.5"
+                >
                   <span className="text-white/40 text-[11px]">
                     {new Date(c.created_at).toLocaleDateString("fr-FR", {
                       day: "numeric",
@@ -283,18 +336,22 @@ const ChurchCard = ({
               href={`https://confessio.fr/paroisse/${churchDetails?.website?.uuid}#feedbackForm`}
               target="_blank"
               className="underline text-white/70 text-sm"
+              onClick={() =>
+                posthog.capture("contribution_link_clicked", {
+                  church_uuid: church.uuid,
+                  church_name: church.name,
+                })
+              }
             >
               Compl&eacute;ter les horaires de cette paroisse
             </Link>
           </div>
 
-          {!isLoading &&
-            churchDetails &&
-            dayKeys.length === 0 && (
-              <p className="text-center text-gray-500 py-6 text-sm">
-                Aucun horaire disponible
-              </p>
-            )}
+          {!isLoading && churchDetails && dayKeys.length === 0 && (
+            <p className="text-center text-gray-500 py-6 text-sm">
+              Aucun horaire disponible
+            </p>
+          )}
         </div>
       </ModalSheetScroller>
     </>

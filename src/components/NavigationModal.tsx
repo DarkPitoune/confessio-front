@@ -72,7 +72,9 @@ const NavigationModal = ({
         </p>
         <div className="flex flex-col items-center justify-center gap-2">
           <span className="text-xs text-gray-300">Un projet généreusement encouragé par</span>
-          <img src="/hozana-logo-white.png" alt="Hozana" className="h-7" />
+          <a href="https://hozana.org" target="_blank" rel="noopener noreferrer">
+            <img src="/hozana-logo-white.png" alt="Hozana" className="h-7" />
+          </a>
         </div>
       </div>
     </div>

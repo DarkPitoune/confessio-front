@@ -119,21 +119,11 @@ export interface components {
             zipcode: string | null;
             /** City */
             city: string | null;
-            /**
-             * Website Uuid
-             * Format: uuid
-             */
-            website_uuid: string;
             /** Events */
             events: components["schemas"]["EventOut"][];
         };
         /** EventOut */
         EventOut: {
-            /**
-             * Church Uuid
-             * Format: uuid
-             */
-            church_uuid: string;
             /**
              * Start
              * Format: date-time
@@ -146,52 +136,12 @@ export interface components {
             /** Source Has Been Moderated */
             source_has_been_moderated: boolean;
         };
-        /**
-         * FeedbackTypeEnum
-         * @enum {string}
-         */
-        FeedbackTypeEnum: "good" | "outdated" | "error" | "comment";
-        /** ReportOut */
-        ReportOut: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            feedback_type: components["schemas"]["FeedbackTypeEnum"];
-            /** Comment */
-            comment: string | null;
-            /** Sub Reports */
-            sub_reports: components["schemas"]["ReportOut"][];
-        };
         /** SearchResult */
         SearchResult: {
             /** Churches */
             churches: components["schemas"]["ChurchOut"][];
-            /** Websites */
-            websites: components["schemas"]["WebsiteOut"][];
             /** Aggregations */
             aggregations: components["schemas"]["AggregationOut"][];
-        };
-        /** WebsiteOut */
-        WebsiteOut: {
-            /**
-             * Uuid
-             * Format: uuid
-             */
-            uuid: string;
-            /** Name */
-            name: string;
-            /** Home Url */
-            home_url: string;
-            /** Events */
-            events: components["schemas"]["EventOut"][];
-            /** Has More Events */
-            has_more_events: boolean;
-            /** Reports Count */
-            reports_count: Record<string, never>[];
-            /** Reports */
-            reports: components["schemas"]["ReportOut"][];
         };
         /** AutocompleteItem */
         AutocompleteItem: {
@@ -229,11 +179,6 @@ export interface components {
             zipcode: string | null;
             /** City */
             city: string | null;
-            /**
-             * Website Uuid
-             * Format: uuid
-             */
-            website_uuid: string;
             /** Events */
             events: components["schemas"]["EventOut"][];
             website: components["schemas"]["WebsiteOut"];
@@ -242,6 +187,11 @@ export interface components {
             /** Parsings */
             parsings: components["schemas"]["ParsingOut"][];
         };
+        /**
+         * FeedbackTypeEnum
+         * @enum {string}
+         */
+        FeedbackTypeEnum: "good" | "outdated" | "error" | "comment";
         /** ParsingOut */
         ParsingOut: {
             /**
@@ -253,6 +203,19 @@ export interface components {
             scraping_url: string | null;
             /** Image Url */
             image_url: string | null;
+        };
+        /** ReportOut */
+        ReportOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            feedback_type: components["schemas"]["FeedbackTypeEnum"];
+            /** Comment */
+            comment: string | null;
+            /** Sub Reports */
+            sub_reports: components["schemas"]["ReportOut"][];
         };
         /** ScheduleOut */
         ScheduleOut: {
@@ -272,6 +235,20 @@ export interface components {
          * @enum {string}
          */
         SourceTypeEnum: "parsing" | "oclocher";
+        /** WebsiteOut */
+        WebsiteOut: {
+            /**
+             * Uuid
+             * Format: uuid
+             */
+            uuid: string;
+            /** Name */
+            name: string;
+            /** Home Url */
+            home_url: string;
+            /** Reports */
+            reports: components["schemas"]["ReportOut"][];
+        };
         /** ErrorSchema */
         ErrorSchema: {
             /** Detail */

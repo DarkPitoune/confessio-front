@@ -19,6 +19,7 @@
     "leaflet": "^1.9.4",
     "leaflet-defaulticon-compatibility": "^0.1.2",
     "next": "15.3.6",
+    "posthog-js": "^1.365.0",
     "prettier": "^3.6.2",
     "react": "^19.0.0",
     "react-bottom-sheet": "^1.1.1",

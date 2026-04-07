@@ -7,8 +7,16 @@ import { NavigationModal } from "./NavigationModal";
 import { useRouter, usePathname } from "next/navigation";
 import { useAtom } from "jotai";
 import { isSearchFocusedAtom } from "@/atoms";
-import { ArrowLeftIcon, BuildingsIcon, ChurchIcon, CircleNotchIcon, UsersIcon, XIcon } from "@phosphor-icons/react";
+import {
+  ArrowLeftIcon,
+  BuildingsIcon,
+  ChurchIcon,
+  CircleNotchIcon,
+  UsersIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { Icon } from "@phosphor-icons/react/dist/lib/types";
+import posthog from "posthog-js";
 
 const mapItemTypeToIcon: Record<string, Icon> = {
   church: ChurchIcon,
@@ -64,7 +72,11 @@ export const SearchInput = ({
   );
   const onInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(e.target.value);
+      const value = e.target.value;
+      setSearchQuery(value);
+      if (value.length > 0) {
+        posthog.capture("search_performed", { query: value });
+      }
       // When user types, navigate back to home if on a church detail page
       if (pathname?.startsWith("/church/")) {
         const currentParams = new URLSearchParams(window.location.search);
@@ -120,7 +132,13 @@ export const SearchInput = ({
               <ArrowLeftIcon size={24} />
             </button>
           ) : (
-            <button onClick={() => setIsNavigationModalOpen(true)} className="cursor-pointer">
+            <button
+              onClick={() => {
+                setIsNavigationModalOpen(true);
+                posthog.capture("navigation_modal_opened");
+              }}
+              className="cursor-pointer"
+            >
               <Image
                 src="/confessioLogoBlue.svg"
                 alt="Logo de Confessio"
@@ -149,7 +167,10 @@ export const SearchInput = ({
             className="outline-none flex-1"
           />
           {isLoading && (
-            <CircleNotchIcon size={18} className="animate-spin self-center shrink-0" />
+            <CircleNotchIcon
+              size={18}
+              className="animate-spin self-center shrink-0"
+            />
           )}
           {searchQuery.length > 0 && (
             <button
@@ -203,12 +224,25 @@ export const SearchInput = ({
                     <button
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => {
+                        posthog.capture("search_result_selected", {
+                          result_type: item.type,
+                          result_name: item.name,
+                          result_uuid: item.uuid,
+                          query: searchQuery,
+                        });
                         inputRef.current?.blur();
-                        const params = new URLSearchParams(window.location.search);
+                        const params = new URLSearchParams(
+                          window.location.search,
+                        );
                         if (item.latitude && item.longitude) {
-                          params.set("center", `${item.latitude},${item.longitude}`);
+                          params.set(
+                            "center",
+                            `${item.latitude},${item.longitude}`,
+                          );
                         }
-                        router.push(`/church/${item.uuid}?${params.toString()}`);
+                        router.push(
+                          `/church/${item.uuid}?${params.toString()}`,
+                        );
                       }}
                       className={className}
                     >
@@ -217,7 +251,14 @@ export const SearchInput = ({
                   ) : (
                     <button
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={onClick(item)}
+                      onClick={() => {
+                        posthog.capture("search_result_selected", {
+                          result_type: item.type,
+                          result_name: item.name,
+                          query: searchQuery,
+                        });
+                        onClick(item)();
+                      }}
                       className={className}
                     >
                       {inner}
