@@ -43,13 +43,20 @@ export function HomePage({
   } | null>(null);
 
 
+  const mapCenter = map?.getCenter();
+
   const { data, isLoading, isFetching } = useQuery<
     components["schemas"]["AutocompleteItem"][]
   >({
     queryKey: ["mapData", debouncedSearchQuery],
     queryFn: async () => {
       if (debouncedSearchQuery.length === 0) return Promise.resolve([]);
-      return fetchApi(`/autocomplete?query=${debouncedSearchQuery}`);
+      const params = new URLSearchParams({ query: debouncedSearchQuery });
+      if (mapCenter) {
+        params.set("latitude", mapCenter.lat.toString());
+        params.set("longitude", mapCenter.lng.toString());
+      }
+      return fetchApi(`/autocomplete?${params}`);
     },
     placeholderData: (previousData) => previousData,
   });

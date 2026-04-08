@@ -315,8 +315,10 @@ export interface operations {
     };
     front_front_api_api_front_autocomplete: {
         parameters: {
-            query?: {
-                query?: string;
+            query: {
+                query: string;
+                latitude?: number | null;
+                longitude?: number | null;
             };
             header?: never;
             path?: never;
