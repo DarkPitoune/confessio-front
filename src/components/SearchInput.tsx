@@ -111,9 +111,7 @@ export const SearchInput = ({
         className={clsx([
           "absolute flex flex-col items-stretch justify-start z-40 md:w-[468px] md:rounded-3xl md:inset-x-4 md:top-4",
           isFocused
-            ? hasResults
-              ? "inset-x-0 top-0 bg-white pt-4 px-4 max-h-[80vh] md:bg-transparent md:p-0 md:max-h-none"
-              : "inset-0 bg-white pt-4 px-4 md:bg-transparent md:p-0 md:bottom-4 md:h-auto"
+            ? "inset-0 h-dvh bg-white pt-4 px-4 md:bg-transparent md:p-0 md:h-auto md:bottom-auto md:right-auto"
             : "inset-x-4 top-4 rounded-3xl",
         ])}
       >
