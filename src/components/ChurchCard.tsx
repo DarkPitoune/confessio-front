@@ -2,6 +2,7 @@ import { components } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
+import ModalSheetDragZone from "./ModalSheet/ModalSheetDragZone";
 import { fetchApi, getFrenchTimeString } from "@/utils";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -115,35 +116,37 @@ const ChurchCard = ({
 
   return (
     <>
-      <div className="px-4 pt-4 pb-2 flex flex-col">
-        <span className="flex justify-between gap-1 items-center">
-          <h3 className="text-white leading-tight text-2xl font-semibold">
-            {church.name}
-          </h3>
+      <ModalSheetDragZone>
+        <div className="px-4 pt-4 pb-2 flex flex-col">
+          <span className="flex justify-between gap-1 items-center">
+            <h3 className="text-white leading-tight text-2xl font-semibold">
+              {church.name}
+            </h3>
+            <Link
+              href={`/?${query}`}
+              className="shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors z-10"
+            >
+              <XIcon size={16} weight="bold" color="white" />
+            </Link>
+          </span>
           <Link
-            href={`/?${query}`}
-            className="shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors z-10"
+            href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
+            target="_blank"
+            className="whitespace-pre-line hover:underline text-xs font-light text-[#cecece]"
+            onClick={() =>
+              posthog.capture("directions_opened", {
+                church_uuid: church.uuid,
+                church_name: church.name,
+              })
+            }
           >
-            <XIcon size={16} weight="bold" color="white" />
+            {[church.address, church.city].filter(Boolean).join("\n")}
           </Link>
-        </span>
-        <Link
-          href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
-          target="_blank"
-          className="whitespace-pre-line hover:underline text-xs font-light text-[#cecece]"
-          onClick={() =>
-            posthog.capture("directions_opened", {
-              church_uuid: church.uuid,
-              church_name: church.name,
-            })
-          }
-        >
-          {[church.address, church.city].filter(Boolean).join("\n")}
-        </Link>
-      </div>
+        </div>
 
-      {/* Separator — 1px, #d9d9d9 at 29% opacity */}
-      <hr className="mx-0 border-0 h-px bg-[#d9d9d94a]" />
+        {/* Separator — 1px, #d9d9d9 at 29% opacity */}
+        <hr className="mx-0 border-0 h-px bg-[#d9d9d94a]" />
+      </ModalSheetDragZone>
 
       <ModalSheetScroller draggableAt="top">
         {/* Parish link — white 12px semibold + external icon */}

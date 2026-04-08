@@ -1,10 +1,11 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import { SheetRef } from "react-modal-sheet";
+import { useEffect } from "react";
+import { useSheetRef } from "./ModalSheet/SheetContext";
 import { ChurchCard } from "./ChurchCard";
 import ModalSheetContainer from "./ModalSheet/ModalSheetContainer";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
+import ModalSheetDragZone from "./ModalSheet/ModalSheetDragZone";
 import { AggregatedSearchResults } from "@/utils";
 import ChurchTile from "./ChurchTile";
 import { useDateFilter } from "@/hooks/useDateFilter";
@@ -20,7 +21,7 @@ function ModalSheet({
 }) {
   // URL is the single source of truth - use the church from server if present
   const { date, setDate } = useDateFilter();
-  const sheetRef = useRef<SheetRef>(null);
+  const sheetRef = useSheetRef();
   const { data: searchResults } = useSearchResults();
 
   const displayedSearchResults = searchResults
@@ -28,7 +29,7 @@ function ModalSheet({
     : originalSearchResults;
 
   useEffect(() => {
-    if (selectedChurch) sheetRef.current?.snapTo(0);
+    if (selectedChurch) sheetRef?.current?.snapTo(0);
   }, [selectedChurch]);
 
   return (
@@ -37,30 +38,32 @@ function ModalSheet({
         <ChurchCard church={selectedChurch} />
       ) : (
         <>
-          <div className="flex flex-col gap-2 py-2">
-            <h4 className="text-base md:text-lg font-semibold text-white px-4">
-              Horaires de confession proches de vous
-            </h4>
-            <div className="px-4 grid grid-cols-2 pb-2">
-              <label
-                htmlFor="date-filter"
-                className="text-sm font-medium text-gray-300 flex items-center"
-              >
-                Sélectionner une date
-              </label>
-              <input
-                id="date-filter"
-                type="date"
-                className="px-3 py-1 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lightblue focus:border-transparent backdrop-blur-sm"
-                min={new Date().toISOString().split("T")[0]}
-                value={date?.toISOString().split("T")[0] || ""}
-                onChange={({ target }) =>
-                  setDate(target.value ? new Date(target.value) : null)
-                }
-              />
+          <ModalSheetDragZone>
+            <div className="flex flex-col gap-2 py-2">
+              <h4 className="text-base md:text-lg font-semibold text-white px-4">
+                Horaires de confession proches de vous
+              </h4>
+              <div className="px-4 grid grid-cols-2 pb-2">
+                <label
+                  htmlFor="date-filter"
+                  className="text-sm font-medium text-gray-300 flex items-center"
+                >
+                  Sélectionner une date
+                </label>
+                <input
+                  id="date-filter"
+                  type="date"
+                  className="px-3 py-1 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lightblue focus:border-transparent backdrop-blur-sm"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={date?.toISOString().split("T")[0] || ""}
+                  onChange={({ target }) =>
+                    setDate(target.value ? new Date(target.value) : null)
+                  }
+                />
+              </div>
             </div>
-          </div>
-          <hr className="text-gray-500" />
+            <hr className="text-gray-500" />
+          </ModalSheetDragZone>
           <ModalSheetScroller draggableAt="top">
             <div className="p-4 space-y-4">
               {displayedSearchResults?.churches?.map((church) => (
