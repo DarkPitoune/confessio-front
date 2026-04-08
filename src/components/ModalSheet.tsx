@@ -29,7 +29,7 @@ function ModalSheet({
     : originalSearchResults;
 
   useEffect(() => {
-    if (selectedChurch) sheetRef?.current?.snapTo(0);
+    if (selectedChurch) sheetRef?.current?.snapTo(1);
   }, [selectedChurch]);
 
   return (
