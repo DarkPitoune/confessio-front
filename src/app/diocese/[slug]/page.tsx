@@ -1,7 +1,14 @@
-import { fetchDioceseBySlug, dioceseToBounds, boundsToString } from "@/utils";
+import { fetchDioceseBySlug, fetchDioceses, dioceseToBounds, boundsToString } from "@/utils";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import DioceseRedirect from "./DioceseRedirect";
+
+export const revalidate = false;
+
+export async function generateStaticParams() {
+  const dioceses = await fetchDioceses();
+  return dioceses.map((d) => ({ slug: d.slug }));
+}
 
 type Props = {
   params: Promise<{ slug: string }>;

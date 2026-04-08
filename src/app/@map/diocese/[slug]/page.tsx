@@ -1,5 +1,12 @@
-import { fetchDioceseBySlug, dioceseToBounds } from "@/utils";
+import { fetchDioceseBySlug, fetchDioceses, dioceseToBounds } from "@/utils";
 import { HomePage } from "../../default";
+
+export const revalidate = false;
+
+export async function generateStaticParams() {
+  const dioceses = await fetchDioceses();
+  return dioceses.map((d) => ({ slug: d.slug }));
+}
 
 export default async function DioceseMapPage({
   params,

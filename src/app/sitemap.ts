@@ -22,7 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const dioceseEntries: MetadataRoute.Sitemap = dioceses.map((diocese) => ({
     url: `${BASE_URL}/diocese/${diocese.slug}`,
-    changeFrequency: "weekly",
+    lastModified: new Date().toISOString().split("T")[0],
+    changeFrequency: "daily",
     priority: 0.7,
   }));
 
