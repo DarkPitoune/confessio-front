@@ -13,7 +13,7 @@ const ModalSheetScroller = ({
       setIsMounted(true);
   }, []);
   if (isMounted)
-    return <ModalSheetScrollerClient>{children}</ModalSheetScrollerClient>;
+    return <ModalSheetScrollerClient {...props}>{children}</ModalSheetScrollerClient>;
   return (
     <ModalSheetScrollerServer {...props}>{children}</ModalSheetScrollerServer>
   );

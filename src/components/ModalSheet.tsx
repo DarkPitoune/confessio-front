@@ -5,6 +5,7 @@ import { SheetRef } from "react-modal-sheet";
 import { ChurchCard } from "./ChurchCard";
 import ModalSheetContainer from "./ModalSheet/ModalSheetContainer";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
+import ModalSheetDraggableArea from "./ModalSheet/ModalSheetDraggableArea";
 import { AggregatedSearchResults } from "@/utils";
 import ChurchTile from "./ChurchTile";
 import { useDateFilter } from "@/hooks/useDateFilter";
@@ -37,7 +38,7 @@ function ModalSheet({
         <ChurchCard church={selectedChurch} />
       ) : (
         <>
-          <div className="flex flex-col gap-2 py-2">
+          <ModalSheetDraggableArea className="flex flex-col gap-2 py-2">
             <h4 className="text-base md:text-lg font-semibold text-white px-4">
               Horaires de confession proches de vous
             </h4>
@@ -59,7 +60,7 @@ function ModalSheet({
                 }
               />
             </div>
-          </div>
+          </ModalSheetDraggableArea>
           <hr className="text-gray-500" />
           <ModalSheetScroller draggableAt="top">
             <div className="p-4 space-y-4">
