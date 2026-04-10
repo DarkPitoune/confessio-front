@@ -68,6 +68,8 @@ export function HomePage({
     function attachMapMoveHandler() {
       const moveEndHandler = () => {
         if (map) {
+          if (map._lastResizeTime && Date.now() - map._lastResizeTime < 500) return;
+
           const bounds = map.getBounds();
           setBounds({
             south: bounds.getSouth(),

@@ -13,6 +13,7 @@ import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 
 declare module "leaflet" {
   interface Map {
+    _lastResizeTime?: number;
     setActiveArea(
       cssClassOrStyles: string | Partial<CSSStyleDeclaration>,
       keepCenter?: boolean,

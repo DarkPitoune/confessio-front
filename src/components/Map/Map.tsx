@@ -127,6 +127,7 @@ const Map = ({
   useEffect(() => {
     const handleResize = () => {
       if (mapInstanceRef.current) {
+        mapInstanceRef.current._lastResizeTime = Date.now();
         mapInstanceRef.current.setActiveArea(getActiveAreaStyles());
       }
     };

@@ -26,7 +26,7 @@ export const useSearchResults = () => {
         signal,
       });
     },
-    staleTime: 200,
+    staleTime: 30_000,
     placeholderData: (previousdata) => previousdata,
   });
 };

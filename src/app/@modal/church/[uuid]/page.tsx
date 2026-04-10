@@ -1,4 +1,4 @@
-import ModalSheet from "@/components/ModalSheet";
+import ModalSheetWrapper from "@/components/ModalSheet/ModalSheetWrapper";
 import { components } from "@/types";
 import { fetchApi } from "@/utils";
 
@@ -11,5 +11,10 @@ export default async function ChurchModal({
   const selectedChurch: components["schemas"]["ChurchDetails"] = await fetchApi(
     `/church/${uuid}`,
   );
-  return <ModalSheet selectedChurch={selectedChurch} />;
+  return (
+    <ModalSheetWrapper
+      selectedChurchUuid={uuid}
+      serverChurchData={selectedChurch}
+    />
+  );
 }
