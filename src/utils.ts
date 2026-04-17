@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { components } from "./types";
 
 const API_URL = "https://confessio.fr/front/api";
@@ -110,18 +111,20 @@ export const getConfessionTimeString = ({
     ? `à ${getFrenchTimeString(start)}`
     : `de ${getFrenchTimeString(start)} à ${getFrenchTimeString(end)}`;
 
-export const fetchDioceses = async (): Promise<
-  components["schemas"]["DioceseOut"][]
-> => {
-  return fetchApi("/dioceses");
-};
+export const fetchDioceses = cache(
+  async (): Promise<components["schemas"]["DioceseOut"][]> => {
+    return fetchApi("/dioceses", { cache: "force-cache" });
+  },
+);
 
-export const fetchDioceseBySlug = async (
-  slug: string,
-): Promise<components["schemas"]["DioceseOut"] | null> => {
-  const dioceses = await fetchDioceses();
-  return dioceses.find((d) => d.slug === slug) ?? null;
-};
+export const fetchDioceseBySlug = cache(
+  async (
+    slug: string,
+  ): Promise<components["schemas"]["DioceseOut"] | null> => {
+    const dioceses = await fetchDioceses();
+    return dioceses.find((d) => d.slug === slug) ?? null;
+  },
+);
 
 export const dioceseToBounds = (
   diocese: components["schemas"]["DioceseOut"],
