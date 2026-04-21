@@ -10,12 +10,40 @@ import posthog from "posthog-js";
 import {
   ArrowSquareOutIcon,
   CircleNotchIcon,
+  NavigationArrowIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   XIcon,
 } from "@phosphor-icons/react";
 
 type EventOut = components["schemas"]["EventOut"];
+type FeedbackType = components["schemas"]["FeedbackTypeEnum"];
+type CommentNode = {
+  comment: string;
+  created_at: string;
+  feedback_type: FeedbackType;
+  children: CommentNode[];
+};
+
+const CommentEntry = ({ node }: { node: CommentNode }) => (
+  <div className="flex flex-col gap-0.5">
+    <span className="tabular text-deepblue/50 text-[11px] font-medium">
+      {new Date(node.created_at).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })}
+    </span>
+    <p className="text-ink text-[13px] leading-normal">{node.comment}</p>
+    {node.children.length > 0 && (
+      <div className="mt-3 pl-4 border-l border-ink/15 flex flex-col gap-2">
+        {node.children.map((child, i) => (
+          <CommentEntry key={i} node={child} />
+        ))}
+      </div>
+    )}
+  </div>
+);
 
 const formatDayLabel = (dayKey: string) => {
   const date = new Date(dayKey);
@@ -83,19 +111,38 @@ const ChurchCard = ({
     const reports = churchDetails?.website?.reports ?? [];
     let up = 0;
     let down = 0;
-    const allComments: { comment: string; created_at: string }[] = [];
-    const walk = (list: typeof reports) => {
+    const countVotes = (list: typeof reports) => {
       for (const r of list) {
         if (r.feedback_type === "good") up++;
         if (r.feedback_type === "outdated" || r.feedback_type === "error")
           down++;
-        if (r.comment)
-          allComments.push({ comment: r.comment, created_at: r.created_at });
-        walk(r.sub_reports);
+        countVotes(r.sub_reports);
       }
     };
-    walk(reports);
-    return { upvotes: up, downvotes: down, comments: allComments };
+    countVotes(reports);
+
+    const buildComments = (list: typeof reports): CommentNode[] => {
+      const result: CommentNode[] = [];
+      for (const r of list) {
+        const children = buildComments(r.sub_reports);
+        if (r.comment) {
+          result.push({
+            comment: r.comment,
+            created_at: r.created_at,
+            feedback_type: r.feedback_type,
+            children,
+          });
+        } else {
+          result.push(...children);
+        }
+      }
+      return result;
+    };
+    return {
+      upvotes: up,
+      downvotes: down,
+      comments: buildComments(reports),
+    };
   }, [churchDetails?.website?.reports]);
 
   const searchParams = useSearchParams();
@@ -117,13 +164,14 @@ const ChurchCard = ({
   return (
     <>
       <ModalSheetDragZone>
-        <div className="px-4 pt-4 pb-2 flex flex-col">
-          <span className="flex justify-between gap-1 items-center">
-            <h3 className="text-white leading-tight text-2xl font-semibold">
+        <div className="px-5 pt-4 pb-3 flex flex-col gap-1.5">
+          <span className="flex justify-between gap-2 items-start">
+            <h3 className="text-white leading-[1.15] text-[22px] font-semibold tracking-[-0.01em]">
               {church.name}
             </h3>
             <Link
               href={`/?${query}`}
+              aria-label="Fermer"
               className="shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors z-10"
             >
               <XIcon size={16} weight="bold" color="white" />
@@ -132,7 +180,7 @@ const ChurchCard = ({
           <Link
             href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
             target="_blank"
-            className="whitespace-pre-line hover:underline text-xs font-light text-[#cecece]"
+            className="group inline-flex items-start gap-1.5 self-start text-[13px] leading-snug text-white/70 hover:text-white transition-colors"
             onClick={() =>
               posthog.capture("directions_opened", {
                 church_uuid: church.uuid,
@@ -140,22 +188,27 @@ const ChurchCard = ({
               })
             }
           >
-            {[church.address, church.city].filter(Boolean).join("\n")}
+            <NavigationArrowIcon
+              size={14}
+              weight="fill"
+              className="mt-[3px] shrink-0 text-white/55 group-hover:text-white transition-colors"
+            />
+            <span className="whitespace-pre-line">
+              {[church.address, church.city].filter(Boolean).join("\n")}
+            </span>
           </Link>
         </div>
 
-        {/* Separator — 1px, #d9d9d9 at 29% opacity */}
-        <hr className="mx-0 border-0 h-px bg-[#d9d9d94a]" />
+        <hr className="mx-0 border-0 h-px bg-white/12" />
       </ModalSheetDragZone>
 
       <ModalSheetScroller draggableAt="top">
-        {/* Parish link — white 12px semibold + external icon */}
         {churchDetails?.website?.home_url && (
-          <div className="px-4 py-2 flex items-center gap-2">
+          <div className="px-5 pt-3 pb-1 flex">
             <Link
               href={churchDetails.website.home_url}
               target="_blank"
-              className="flex items-center gap-2 hover:underline text-xs font-semibold text-white"
+              className="inline-flex items-center gap-1.5 text-[12px] font-medium text-white/75 hover:text-white transition-colors"
               onClick={() =>
                 posthog.capture("parish_website_clicked", {
                   church_uuid: church.uuid,
@@ -166,14 +219,14 @@ const ChurchCard = ({
             >
               <span>Paroisse de {church.name}</span>
               <ArrowSquareOutIcon
-                size={16}
-                color="white"
+                size={13}
+                weight="bold"
                 className="shrink-0"
               />
             </Link>
           </div>
         )}
-        <div className="pb-5">
+        <div className="pb-6 pt-2">
           {isLoading && (
             <div className="flex items-center justify-center py-8">
               <CircleNotchIcon
@@ -184,62 +237,71 @@ const ChurchCard = ({
             </div>
           )}
 
-          {/* Day tabs + white card */}
-          {churchDetails &&
-            dayKeys.length > 0 && (
-              <div className="mx-3">
-                {dayKeys.length > 0 && (
-                  <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)] scrollbar-hide">
-                    {dayKeys.map((dayKey, i) => {
-                      const { dayName, dateNum } = formatDayLabel(dayKey);
-                      const isSelected = i === selectedDayIndex;
-                      return (
-                        <button
-                          key={dayKey}
-                          onClick={(e) => {
-                            setSelectedDayIndex(i);
-                            e.currentTarget.scrollIntoView({
-                              behavior: "smooth",
-                              inline: "center",
-                              block: "nearest",
-                            });
-                          }}
-                          className={`relative flex flex-col items-center shrink-0 snap-center px-3 pt-0.5 pb-1.5 text-[15px] font-semibold leading-snug rounded-t-lg ${isSelected ? "bg-white text-black" : "bg-transparent text-white/50"}`}
-                        >
-                          <span>{dayName}</span>
-                          <span>{dateNum}</span>
-                          {isSelected && (
-                            <>
-                              <span className="absolute bottom-0 -left-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_0_0,transparent_8px,white_8px)]" />
-                              <span className="absolute bottom-0 -right-2 w-2 h-2 pointer-events-none bg-[radial-gradient(circle_at_100%_0,transparent_8px,white_8px)]" />
-                            </>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="rounded-lg bg-white overflow-hidden">
-                  {eventsForDay.map((event, i) => {
-                    const schedules = getSchedulesForEvent(event);
-                    return (
-                      <div key={`${event.start}-${i}`} className="px-4 py-3 text-center">
-                        <span className="inline-block rounded-full px-4 py-1.5 text-base font-semibold bg-deepblue text-white">
+          {churchDetails && dayKeys.length > 0 && (
+            <div className="mx-3">
+              <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)] scrollbar-hide">
+                {dayKeys.map((dayKey, i) => {
+                  const { dayName, dateNum } = formatDayLabel(dayKey);
+                  const isSelected = i === selectedDayIndex;
+                  return (
+                    <button
+                      key={dayKey}
+                      onClick={(e) => {
+                        setSelectedDayIndex(i);
+                        e.currentTarget.scrollIntoView({
+                          behavior: "smooth",
+                          inline: "center",
+                          block: "nearest",
+                        });
+                      }}
+                      className={[
+                        "day-tab relative flex flex-col items-center shrink-0 snap-center px-3 pt-1 pb-2 text-[14px] font-semibold leading-tight rounded-t-xl transition-colors",
+                        isSelected
+                          ? "day-tab-selected bg-paper text-deepblue"
+                          : "bg-transparent text-white/65 hover:text-white/90",
+                      ].join(" ")}
+                    >
+                      <span className="text-[11px] font-medium uppercase tracking-[0.08em] opacity-80">
+                        {dayName}
+                      </span>
+                      <span className="tabular text-[15px] font-semibold leading-tight">
+                        {dateNum}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="rounded-xl bg-paper overflow-hidden divide-y divide-hairline shadow-[0_4px_16px_-6px_rgba(0,0,0,0.25)]">
+                {eventsForDay.map((event, i) => {
+                  const schedules = getSchedulesForEvent(event);
+                  return (
+                    <div
+                      key={`${event.start}-${i}`}
+                      className="px-4 py-3.5 flex flex-col gap-2"
+                    >
+                      <div className="flex justify-center">
+                        <span className="tabular inline-flex items-center rounded-full px-4 py-1.5 text-[15px] font-semibold bg-deepblue text-white">
                           {formatTimeRange(event)}
                         </span>
-                        <div className="italic text-gray-500 flex flex-col gap-1 text-[13px] leading-relaxed mt-1 text-left">
+                      </div>
+                      {schedules.length > 0 && (
+                        <div className="flex flex-col gap-1.5 text-[13px] leading-relaxed text-ink/70">
                           {schedules.map((s, j) => {
-                            const sourceUrl = s.sources
+                            const sourceParsing = s.sources
                               .filter(
                                 (src) =>
-                                  src.source_type === "parsing" && src.parsing_uuid,
+                                  src.source_type === "parsing" &&
+                                  src.parsing_uuid,
                               )
                               .map((src) =>
                                 churchDetails.parsings.find(
                                   (p) => p.uuid === src.parsing_uuid,
                                 ),
                               )
-                              .find((p) => p?.scraping_url)?.scraping_url;
+                              .find((p) => p?.scraping_url || p?.image_url);
+                            const sourceUrl =
+                              sourceParsing?.scraping_url ??
+                              sourceParsing?.image_url;
                             return (
                               <p key={j} className="whitespace-pre-line">
                                 {s.explanation}
@@ -247,27 +309,28 @@ const ChurchCard = ({
                                   <Link
                                     href={sourceUrl}
                                     target="_blank"
-                                    className="not-italic text-gray-400 block text-right text-sm mt-1"
+                                    className="text-deepblue/50 hover:text-deepblue block text-right text-[12px] mt-1"
                                   >
-                                    Source <span className="text-lg">↗</span>
+                                    Source ↗
                                   </Link>
                                 )}
                               </p>
                             );
                           })}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
+          )}
 
-          {/* Votes — light on dark */}
-          <div className="flex items-center justify-center py-4">
-            <div className="flex items-center gap-3 px-3 bg-white/10 rounded-full h-9">
+          <div className="flex items-center justify-center py-5">
+            <div className="flex items-center gap-3 px-3 bg-white/8 border border-white/12 rounded-full h-9">
               <button
-                className="flex items-center justify-center w-5 h-5"
+                aria-label="Utile"
+                className="flex items-center justify-center w-6 h-6 text-white/85 hover:text-white transition-colors"
                 onClick={() =>
                   posthog.capture("church_upvoted", {
                     church_uuid: church.uuid,
@@ -275,17 +338,18 @@ const ChurchCard = ({
                   })
                 }
               >
-                <ThumbsUpIcon size={20} color="white" />
+                <ThumbsUpIcon size={18} weight="regular" />
               </button>
-              <span className="tabular-nums text-white text-base font-semibold">
+              <span className="tabular text-white text-[14px] font-semibold min-w-[1ch] text-center">
                 {upvotes}
               </span>
-              <div className="w-px h-6 bg-white/20" />
-              <span className="tabular-nums text-white text-base font-semibold">
+              <div className="w-px h-5 bg-white/20" />
+              <span className="tabular text-white text-[14px] font-semibold min-w-[1ch] text-center">
                 {downvotes}
               </span>
               <button
-                className="flex items-center justify-center w-5 h-5"
+                aria-label="Pas utile"
+                className="flex items-center justify-center w-6 h-6 text-white/85 hover:text-white transition-colors"
                 onClick={() =>
                   posthog.capture("church_downvoted", {
                     church_uuid: church.uuid,
@@ -293,40 +357,46 @@ const ChurchCard = ({
                   })
                 }
               >
-                <ThumbsDownIcon size={20} color="white" />
+                <ThumbsDownIcon size={18} weight="regular" />
               </button>
             </div>
           </div>
 
-          {/* Comments */}
           {comments.length > 0 && (
-            <div className="px-4 pb-3 flex flex-col gap-2">
+            <div className="px-4 pb-4 flex flex-col gap-2">
               {comments.map((c, i) => (
                 <div
                   key={i}
-                  className="bg-white/10 rounded-2xl px-3 py-2 flex flex-col gap-0.5"
+                  className="relative bg-paper rounded-xl px-3.5 py-2.5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.2)]"
                 >
-                  <span className="text-white/40 text-[11px]">
-                    {new Date(c.created_at).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </span>
-                  <p className="text-white text-[13px] leading-normal">
-                    {c.comment}
-                  </p>
+                  {c.feedback_type === "good" && (
+                    <ThumbsUpIcon
+                      size={14}
+                      weight="fill"
+                      aria-label="Avis positif"
+                      className="absolute top-2.5 right-3 text-emerald-700/60"
+                    />
+                  )}
+                  {(c.feedback_type === "outdated" ||
+                    c.feedback_type === "error") && (
+                    <ThumbsDownIcon
+                      size={14}
+                      weight="fill"
+                      aria-label="Avis négatif"
+                      className="absolute top-2.5 right-3 text-rose-700/60"
+                    />
+                  )}
+                  <CommentEntry node={c} />
                 </div>
               ))}
             </div>
           )}
 
-          {/* Contribution link */}
-          <div className="text-center">
+          <div className="text-center px-4">
             <Link
               href={`https://confessio.fr/paroisse/${churchDetails?.website?.uuid}#feedbackForm`}
               target="_blank"
-              className="underline text-white/70 text-sm"
+              className="inline-block underline underline-offset-4 decoration-white/30 hover:decoration-white/70 text-white/75 hover:text-white text-[13px] transition-colors"
               onClick={() =>
                 posthog.capture("contribution_link_clicked", {
                   church_uuid: church.uuid,
@@ -339,7 +409,7 @@ const ChurchCard = ({
           </div>
 
           {!isLoading && churchDetails && dayKeys.length === 0 && (
-            <p className="text-center text-gray-500 py-6 text-sm">
+            <p className="text-center text-white/55 py-6 text-sm">
               Aucun horaire disponible
             </p>
           )}
