@@ -30,14 +30,14 @@ const ChurchTile = ({
 }: {
   church: AggregatedSearchResults["churches"][number];
 }) => {
+  const searchParams = useSearchParams();
+  const query = searchParams.toString();
   const events = church.eventsByDay;
   if (events === undefined || Object.keys(events).length === 0) return null;
   const entries = Object.entries(events);
   const totalEvents = entries.reduce((sum, [, e]) => sum + e.length, 0);
   const soleEvent =
     totalEvents === 1 ? entries[0]?.[1][0] ?? null : null;
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
 
   return (
     <Link
