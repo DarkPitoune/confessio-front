@@ -1,5 +1,7 @@
+"use client";
 import { AggregatedSearchResults } from "@/utils";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 const formatDayLabel = (dateString: string) => {
   const date = new Date(dateString);
@@ -34,10 +36,12 @@ const ChurchTile = ({
   const totalEvents = entries.reduce((sum, [, e]) => sum + e.length, 0);
   const soleEvent =
     totalEvents === 1 ? entries[0]?.[1][0] ?? null : null;
+  const searchParams = useSearchParams();
+  const query = searchParams.toString();
 
   return (
     <Link
-      href={`/church/${church.uuid}`}
+      href={query ? `/church/${church.uuid}?${query}` : `/church/${church.uuid}`}
       key={church.uuid}
       className="w-full bg-paper border border-hairline rounded-2xl px-4 py-3 block transition-shadow hover:shadow-[0_4px_14px_-6px_rgba(36,46,76,0.18)] active:scale-[0.995]"
     >

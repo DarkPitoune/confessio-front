@@ -26,7 +26,7 @@ export const ChurchMarker = ({
     let marker: LeafletMarker;
 
     if (timeLabel === null) {
-      const emptySize = selected ? 18 : 10;
+      const emptySize = selected ? 20 : 14;
       const cls = selected ? "empty-church-marker-selected" : "empty-church-marker";
       marker = L.marker([latitude, longitude], {
         icon: L.divIcon({

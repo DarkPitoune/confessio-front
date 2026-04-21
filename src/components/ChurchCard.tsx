@@ -1,16 +1,17 @@
 import { components } from "@/types";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import ModalSheetDragZone from "./ModalSheet/ModalSheetDragZone";
 import { fetchApi, getFrenchTimeString } from "@/utils";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import posthog from "posthog-js";
 import {
   ArrowSquareOutIcon,
   CircleNotchIcon,
   NavigationArrowIcon,
+  PaperPlaneTiltIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   XIcon,
@@ -18,11 +19,19 @@ import {
 
 type EventOut = components["schemas"]["EventOut"];
 type FeedbackType = components["schemas"]["FeedbackTypeEnum"];
+type ErrorType = components["schemas"]["ErrorTypeEnum"];
 type CommentNode = {
   comment: string;
   created_at: string;
   feedback_type: FeedbackType;
   children: CommentNode[];
+};
+
+const ERROR_TYPE_LABELS: Record<ErrorType, string> = {
+  outdated: "Plus à jour",
+  schedules: "Horaires incorrects",
+  churches: "Mauvaise église",
+  paragraphs: "Texte incorrect",
 };
 
 const CommentEntry = ({ node }: { node: CommentNode }) => (
@@ -114,8 +123,7 @@ const ChurchCard = ({
     const countVotes = (list: typeof reports) => {
       for (const r of list) {
         if (r.feedback_type === "good") up++;
-        if (r.feedback_type === "outdated" || r.feedback_type === "error")
-          down++;
+        if (r.feedback_type === "error") down++;
         countVotes(r.sub_reports);
       }
     };
@@ -144,6 +152,57 @@ const ChurchCard = ({
       comments: buildComments(reports),
     };
   }, [churchDetails?.website?.reports]);
+
+  const queryClient = useQueryClient();
+  const [feedbackOpen, setFeedbackOpen] = useState<"good" | "error" | null>(
+    null,
+  );
+  const [feedbackText, setFeedbackText] = useState("");
+  const [errorType, setErrorType] = useState<ErrorType | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const postReport = useMutation({
+    mutationFn: async (payload: components["schemas"]["ReportIn"]) =>
+      fetchApi("/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["churchDetails", church.uuid],
+      });
+      setFeedbackOpen(null);
+      setFeedbackText("");
+      setErrorType(null);
+    },
+  });
+
+  useEffect(() => {
+    if (feedbackOpen) textareaRef.current?.focus();
+  }, [feedbackOpen]);
+
+  const handleFeedbackClick = (type: "good" | "error") => {
+    posthog.capture(
+      type === "good" ? "church_upvoted" : "church_downvoted",
+      { church_uuid: church.uuid, church_name: church.name },
+    );
+    setFeedbackOpen((current) => (current === type ? null : type));
+    setFeedbackText("");
+    setErrorType(null);
+  };
+
+  const handleSubmitFeedback = () => {
+    if (!churchDetails?.website?.uuid || !feedbackOpen) return;
+    postReport.mutate({
+      website_uuid: churchDetails.website.uuid,
+      feedback_type: feedbackOpen,
+      error_type: feedbackOpen === "error" ? errorType : null,
+      comment: feedbackText.trim() || null,
+    });
+  };
+
+  const canReport = Boolean(churchDetails?.website?.uuid);
 
   const searchParams = useSearchParams();
   const query = searchParams.toString();
@@ -326,19 +385,26 @@ const ChurchCard = ({
             </div>
           )}
 
-          <div className="flex items-center justify-center py-5">
+          <div className="flex flex-col items-center py-5 gap-3">
             <div className="flex items-center gap-3 px-3 bg-white/8 border border-white/12 rounded-full h-9">
               <button
                 aria-label="Utile"
-                className="flex items-center justify-center w-6 h-6 text-white/85 hover:text-white transition-colors"
-                onClick={() =>
-                  posthog.capture("church_upvoted", {
-                    church_uuid: church.uuid,
-                    church_name: church.name,
-                  })
-                }
+                disabled={!canReport}
+                className={[
+                  "flex items-center justify-center w-6 h-6 transition-colors",
+                  feedbackOpen === "good"
+                    ? "text-emerald-300"
+                    : "text-white/85 hover:text-white",
+                  !canReport && "opacity-40 cursor-not-allowed",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => handleFeedbackClick("good")}
               >
-                <ThumbsUpIcon size={18} weight="regular" />
+                <ThumbsUpIcon
+                  size={18}
+                  weight={feedbackOpen === "good" ? "fill" : "regular"}
+                />
               </button>
               <span className="tabular text-white text-[14px] font-semibold min-w-[1ch] text-center">
                 {upvotes}
@@ -349,17 +415,105 @@ const ChurchCard = ({
               </span>
               <button
                 aria-label="Pas utile"
-                className="flex items-center justify-center w-6 h-6 text-white/85 hover:text-white transition-colors"
-                onClick={() =>
-                  posthog.capture("church_downvoted", {
-                    church_uuid: church.uuid,
-                    church_name: church.name,
-                  })
-                }
+                disabled={!canReport}
+                className={[
+                  "flex items-center justify-center w-6 h-6 transition-colors",
+                  feedbackOpen === "error"
+                    ? "text-rose-300"
+                    : "text-white/85 hover:text-white",
+                  !canReport && "opacity-40 cursor-not-allowed",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onClick={() => handleFeedbackClick("error")}
               >
-                <ThumbsDownIcon size={18} weight="regular" />
+                <ThumbsDownIcon
+                  size={18}
+                  weight={feedbackOpen === "error" ? "fill" : "regular"}
+                />
               </button>
             </div>
+
+            {feedbackOpen && (
+              <div className="w-full px-4">
+                <div className="bg-paper rounded-xl p-3 flex flex-col gap-2 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.2)]">
+                  {feedbackOpen === "error" && (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(Object.keys(ERROR_TYPE_LABELS) as ErrorType[]).map(
+                        (key) => {
+                          const selected = errorType === key;
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              disabled={postReport.isPending}
+                              onClick={() =>
+                                setErrorType((curr) =>
+                                  curr === key ? null : key,
+                                )
+                              }
+                              className={[
+                                "text-[12px] font-medium rounded-full px-2.5 py-1 transition-colors border",
+                                selected
+                                  ? "bg-deepblue text-white border-deepblue"
+                                  : "bg-transparent text-deepblue/70 border-hairline hover:border-deepblue/40 hover:text-deepblue",
+                              ].join(" ")}
+                            >
+                              {ERROR_TYPE_LABELS[key]}
+                            </button>
+                          );
+                        },
+                      )}
+                    </div>
+                  )}
+                  <textarea
+                    ref={textareaRef}
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Un commentaire ? (optionnel)"
+                    rows={3}
+                    disabled={postReport.isPending}
+                    className="w-full resize-none text-ink text-[13px] leading-normal placeholder:text-ink/40 bg-transparent focus:outline-none disabled:opacity-60"
+                  />
+                  {postReport.isError && (
+                    <p className="text-rose-600 text-[12px]">
+                      Erreur lors de l&apos;envoi. Réessayez.
+                    </p>
+                  )}
+                  <div className="flex justify-end gap-2 items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFeedbackOpen(null);
+                        setFeedbackText("");
+                        setErrorType(null);
+                      }}
+                      disabled={postReport.isPending}
+                      className="text-deepblue/60 hover:text-deepblue text-[13px] px-2 py-1 transition-colors disabled:opacity-50"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSubmitFeedback}
+                      disabled={postReport.isPending}
+                      className="inline-flex items-center gap-1.5 bg-deepblue text-white text-[13px] font-semibold rounded-full px-3.5 py-1.5 hover:bg-deepblue/90 transition-colors disabled:opacity-60"
+                    >
+                      {postReport.isPending ? (
+                        <CircleNotchIcon
+                          size={14}
+                          weight="bold"
+                          className="animate-spin"
+                        />
+                      ) : (
+                        <PaperPlaneTiltIcon size={14} weight="fill" />
+                      )}
+                      Envoyer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {comments.length > 0 && (
@@ -377,8 +531,7 @@ const ChurchCard = ({
                       className="absolute top-2.5 right-3 text-emerald-700/60"
                     />
                   )}
-                  {(c.feedback_type === "outdated" ||
-                    c.feedback_type === "error") && (
+                  {c.feedback_type === "error" && (
                     <ThumbsDownIcon
                       size={14}
                       weight="fill"

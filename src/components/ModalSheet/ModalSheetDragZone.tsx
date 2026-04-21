@@ -1,14 +1,11 @@
 "use client";
-import { useState, useEffect, ReactNode } from "react";
+import { ReactNode } from "react";
 import ModalSheetDragZoneClient from "./ModalSheetDragZoneClient";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const ModalSheetDragZone = ({ children }: { children: ReactNode }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    if (window.visualViewport && window.visualViewport.width < 768)
-      setIsMounted(true);
-  }, []);
-  if (isMounted)
+  const isMobile = useIsMobile();
+  if (isMobile)
     return <ModalSheetDragZoneClient>{children}</ModalSheetDragZoneClient>;
   return <>{children}</>;
 };

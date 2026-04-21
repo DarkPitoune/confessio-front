@@ -21,15 +21,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/front/api/autocomplete": {
+    "/front/api/search/home": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Api Front Autocomplete */
-        get: operations["front_front_api_api_front_autocomplete"];
+        /** Api Front Search Home */
+        get: operations["front_front_api_api_front_search_home"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/front/api/search/diocese/{diocese_uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Api Front Search Diocese */
+        get: operations["front_front_api_api_front_search_diocese"];
         put?: never;
         post?: never;
         delete?: never;
@@ -55,6 +72,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/front/api/autocomplete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Api Front Autocomplete */
+        get: operations["front_front_api_api_front_autocomplete"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/front/api/autocomplete/hits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Api Front Post Autocomplete Hit */
+        post: operations["front_front_api_api_front_post_autocomplete_hit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/front/api/dioceses": {
         parameters: {
             query?: never;
@@ -66,6 +117,23 @@ export interface paths {
         get: operations["front_front_api_api_front_get_dioceses"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/front/api/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Api Front Post Reports */
+        post: operations["front_front_api_api_front_post_reports"];
         delete?: never;
         options?: never;
         head?: never;
@@ -87,6 +155,8 @@ export interface components {
             name: string;
             /** Church Count */
             church_count: number;
+            /** Church With Event Count */
+            church_with_event_count: number;
             /** Centroid Latitude */
             centroid_latitude: number;
             /** Centroid Longitude */
@@ -136,29 +206,17 @@ export interface components {
             /** Source Has Been Moderated */
             source_has_been_moderated: boolean;
         };
-        /** SearchResult */
-        SearchResult: {
+        /** SearchResultOut */
+        SearchResultOut: {
             /** Churches */
             churches: components["schemas"]["ChurchOut"][];
             /** Aggregations */
             aggregations: components["schemas"]["AggregationOut"][];
         };
-        /** AutocompleteItem */
-        AutocompleteItem: {
-            /** Type */
-            type: string;
-            /** Name */
-            name: string;
-            /** Context */
-            context: string | null;
-            /** Url */
-            url: string;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
-            /** Uuid */
-            uuid?: string | null;
+        /** ErrorSchema */
+        ErrorSchema: {
+            /** Detail */
+            detail: string;
         };
         /** ChurchDetails */
         ChurchDetails: {
@@ -191,7 +249,7 @@ export interface components {
          * FeedbackTypeEnum
          * @enum {string}
          */
-        FeedbackTypeEnum: "good" | "outdated" | "error" | "comment";
+        FeedbackTypeEnum: "good" | "error" | "comment";
         /** ParsingOut */
         ParsingOut: {
             /**
@@ -249,10 +307,34 @@ export interface components {
             /** Reports */
             reports: components["schemas"]["ReportOut"][];
         };
-        /** ErrorSchema */
-        ErrorSchema: {
-            /** Detail */
-            detail: string;
+        /** AutocompleteItem */
+        AutocompleteItem: {
+            /** Type */
+            type: string;
+            /** Name */
+            name: string;
+            /** Context */
+            context: string | null;
+            /** Url */
+            url: string;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Uuid */
+            uuid?: string | null;
+        };
+        /** AutocompleteHitIn */
+        AutocompleteHitIn: {
+            /** Query */
+            query: string;
+            /** Latitude */
+            latitude: number | null;
+            /** Longitude */
+            longitude: number | null;
+            /** Rank */
+            rank: number;
+            item: components["schemas"]["AutocompleteItem"];
         };
         /** DioceseOut */
         DioceseOut: {
@@ -273,6 +355,23 @@ export interface components {
             min_longitude: number;
             /** Max Longitude */
             max_longitude: number;
+        };
+        /**
+         * ErrorTypeEnum
+         * @enum {string}
+         */
+        ErrorTypeEnum: "outdated" | "churches" | "paragraphs" | "schedules";
+        /** ReportIn */
+        ReportIn: {
+            /**
+             * Website Uuid
+             * Format: uuid
+             */
+            website_uuid: string;
+            feedback_type: components["schemas"]["FeedbackTypeEnum"];
+            error_type?: components["schemas"]["ErrorTypeEnum"] | null;
+            /** Comment */
+            comment?: string | null;
         };
     };
     responses: never;
@@ -308,17 +407,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SearchResult"];
+                    "application/json": components["schemas"]["SearchResultOut"];
                 };
             };
         };
     };
-    front_front_api_api_front_autocomplete: {
+    front_front_api_api_front_search_home: {
         parameters: {
             query: {
-                query: string;
-                latitude?: number | null;
-                longitude?: number | null;
+                min_lat: number;
+                min_lng: number;
+                max_lat: number;
+                max_lng: number;
+                date_filter?: string | null;
+                hour_min?: number;
+                hour_max?: number;
             };
             header?: never;
             path?: never;
@@ -332,7 +435,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AutocompleteItem"][];
+                    "application/json": components["schemas"]["SearchResultOut"];
+                };
+            };
+        };
+    };
+    front_front_api_api_front_search_diocese: {
+        parameters: {
+            query?: {
+                date_filter?: string | null;
+                hour_min?: number;
+                hour_max?: number;
+            };
+            header?: never;
+            path: {
+                diocese_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResultOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorSchema"];
                 };
             };
         };
@@ -372,6 +510,54 @@ export interface operations {
             };
         };
     };
+    front_front_api_api_front_autocomplete: {
+        parameters: {
+            query: {
+                query: string;
+                latitude?: number | null;
+                longitude?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutocompleteItem"][];
+                };
+            };
+        };
+    };
+    front_front_api_api_front_post_autocomplete_hit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AutocompleteHitIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AutocompleteHitIn"];
+                };
+            };
+        };
+    };
     front_front_api_api_front_get_dioceses: {
         parameters: {
             query?: never;
@@ -388,6 +574,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DioceseOut"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorSchema"];
+                };
+            };
+        };
+    };
+    front_front_api_api_front_post_reports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
                 };
             };
             /** @description Not Found */

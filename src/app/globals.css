@@ -42,6 +42,11 @@ body {
   font-feature-settings: "tnum" 1;
 }
 
+/* Restore browser default: pointer on enabled buttons (Tailwind v4 preflight removes it) */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 /* Day tab corner cutouts — fade in/out when selection changes */
 .day-tab::before,
 .day-tab::after {
