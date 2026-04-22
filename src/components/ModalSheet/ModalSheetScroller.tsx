@@ -1,18 +1,15 @@
-import { useState, useEffect, ReactNode } from "react";
+import { ReactNode } from "react";
 import ModalSheetScrollerServer from "./ModalSheetScrollerServer";
 import ModalSheetScrollerClient from "./ModalSheetScrollerClient";
 import { SheetScrollerProps } from "react-modal-sheet";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const ModalSheetScroller = ({
   children,
   ...props
 }: { children: ReactNode } & SheetScrollerProps) => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    if (window.visualViewport && window.visualViewport.width < 768)
-      setIsMounted(true);
-  }, []);
-  if (isMounted)
+  const isMobile = useIsMobile();
+  if (isMobile)
     return (
       <ModalSheetScrollerClient {...props}>{children}</ModalSheetScrollerClient>
     );

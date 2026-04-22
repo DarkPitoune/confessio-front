@@ -41,6 +41,7 @@ export function HomePage({
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [isCenteringOnMe, setIsCenteringOnMe] = useState(false);
 
 
   const mapCenter = map?.getCenter();
@@ -87,14 +88,18 @@ export function HomePage({
   );
 
   const handleCenterOnMe = () => {
-    if (map) {
-      posthog.capture("center_on_me_clicked");
-      navigator.geolocation.getCurrentPosition((position) => {
+    if (!map || isCenteringOnMe) return;
+    posthog.capture("center_on_me_clicked");
+    setIsCenteringOnMe(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
         const { latitude, longitude } = position.coords;
         setCurrentPosition({ latitude, longitude });
+        map.once("moveend", () => setIsCenteringOnMe(false));
         map.setView([latitude, longitude], 14);
-      });
-    }
+      },
+      () => setIsCenteringOnMe(false),
+    );
   };
 
   return (
@@ -113,9 +118,14 @@ export function HomePage({
       />
       <button
         onClick={handleCenterOnMe}
-        className="absolute right-4 bottom-[160px] md:bottom-4 size-12 z-20 bg-deepblue rounded-full flex items-center justify-center cursor-pointer shadow-lg"
+        disabled={isCenteringOnMe}
+        className="absolute right-4 bottom-[160px] md:bottom-4 size-12 z-20 bg-deepblue rounded-full flex items-center justify-center cursor-pointer shadow-lg disabled:cursor-default"
       >
-        <CrosshairSimpleIcon size={32} color="white" />
+        {isCenteringOnMe ? (
+          <CircleNotchIcon size={32} color="white" className="animate-spin" />
+        ) : (
+          <CrosshairSimpleIcon size={32} color="white" />
+        )}
       </button>
       <div className="relative z-10 h-screen w-screen">
         <Map

@@ -26,12 +26,14 @@ export const ChurchMarker = ({
     let marker: LeafletMarker;
 
     if (timeLabel === null) {
-      const emptySize = selected ? 20 : 10;
+      const emptySize = selected ? 20 : 14;
+      const cls = selected ? "empty-church-marker-selected" : "empty-church-marker";
       marker = L.marker([latitude, longitude], {
         icon: L.divIcon({
-          className: `leaflet-div-icon ${selected ? "empty-church-marker-selected" : "empty-church-marker"}`,
-          html: `<span class='${selected ? "empty-church-marker-selected" : "empty-church-marker"}'></span>`,
+          className: "",
+          html: `<div class="${cls}"></div>`,
           iconSize: [emptySize, emptySize],
+          iconAnchor: [emptySize / 2, emptySize / 2],
         }),
         zIndexOffset: selected ? 1000 : 0,
       })

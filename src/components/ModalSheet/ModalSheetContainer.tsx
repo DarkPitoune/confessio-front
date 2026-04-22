@@ -1,15 +1,12 @@
-import { useState, useEffect, ReactNode } from "react";
+import { ReactNode } from "react";
 import ModalSheetContainerClient from "./ModalSheetContainerClient";
 import ModalSheetContainerServer from "./ModalSheetContainerServer";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 import "./ModalSheet.css";
 const ModalSheetContainer = ({ children }: { children: ReactNode }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    if (window.visualViewport && window.visualViewport.width < 768)
-      setIsMounted(true);
-  }, []);
-  if (isMounted)
+  const isMobile = useIsMobile();
+  if (isMobile)
     return <ModalSheetContainerClient>{children}</ModalSheetContainerClient>;
   return <ModalSheetContainerServer>{children}</ModalSheetContainerServer>;
 };

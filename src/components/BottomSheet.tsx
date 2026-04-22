@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 const BottomSheet = ({
   searchResults,
 }: {
-  searchResults: components["schemas"]["SearchResult"] | undefined;
+  searchResults: components["schemas"]["SearchResultOut"] | undefined;
 }) => {
   const [position, setPosition] = useState<"bottom" | "top">("bottom");
   const [isDragging, setIsDragging] = useState(false);

@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChurchMarker, AggregationMarker, CurrentPositionMarker } from "./Markers";
 
 const getAggregationUuid = (
-  aggregation: components["schemas"]["SearchResult"]["aggregations"][number],
+  aggregation: components["schemas"]["SearchResultOut"]["aggregations"][number],
 ) => {
   const truncatedLatitude =
     Math.trunc(aggregation.centroid_latitude * 10000) / 10000;

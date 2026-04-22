@@ -21,8 +21,8 @@ export const fetchApi = async (url: string, options: RequestInit = {}) => {
 };
 
 export type AggregatedSearchResults = {
-  aggregations: components["schemas"]["SearchResult"]["aggregations"];
-  churches: (components["schemas"]["SearchResult"]["churches"][number] & {
+  aggregations: components["schemas"]["SearchResultOut"]["aggregations"];
+  churches: (components["schemas"]["SearchResultOut"]["churches"][number] & {
     eventsByDay?: Record<string, components["schemas"]["EventOut"][]>;
   })[];
 };
@@ -72,7 +72,7 @@ export const fetchChurchesWithWebsites = async ({
     searchParams.append("date_filter", date_filter);
   }
 
-  const response: components["schemas"]["SearchResult"] = await fetchApi(
+  const response: components["schemas"]["SearchResultOut"] = await fetchApi(
     `/search?${searchParams.toString()}`,
     { signal },
   );

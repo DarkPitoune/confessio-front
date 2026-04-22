@@ -1,18 +1,15 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import Providers from "@/components/Providers";
 import "./globals.css";
 import clsx from "clsx";
 import type { Metadata } from "next";
 import { WEBSITE_JSONLD } from "@/lib/jsonld";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -49,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={clsx(geistSans.variable, geistMono.variable, "antialiased")}
+        className={clsx(dmSans.variable, "antialiased")}
       >
         <script
           type="application/ld+json"
