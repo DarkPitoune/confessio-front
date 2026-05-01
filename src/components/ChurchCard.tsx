@@ -18,6 +18,9 @@ import {
   XIcon,
 } from "@phosphor-icons/react";
 
+type ChurchDetails = components["schemas"]["ChurchDetails"];
+type ChurchOut = components["schemas"]["ChurchOut"];
+type ChurchCacheEntry = ChurchDetails | ChurchOut;
 type EventOut = components["schemas"]["EventOut"];
 type FeedbackType = components["schemas"]["FeedbackTypeEnum"];
 type ErrorType = components["schemas"]["ErrorTypeEnum"];
@@ -27,6 +30,11 @@ type CommentNode = {
   feedback_type: FeedbackType;
   children: CommentNode[];
 };
+
+const isFullDetails = (
+  entry: ChurchCacheEntry | undefined,
+): entry is ChurchDetails =>
+  !!entry && "schedules" in entry && "website" in entry && "parsings" in entry;
 
 const ERROR_TYPE_LABELS: Record<ErrorType, string> = {
   outdated: "Plus à jour",
@@ -78,21 +86,37 @@ const formatTimeRange = (event: EventOut) => {
 };
 
 const ChurchCard = ({
-  church,
+  uuid,
+  initialData,
 }: {
-  church: components["schemas"]["ChurchDetails"];
+  uuid: string;
+  initialData?: ChurchDetails;
 }) => {
-  const { data: churchDetails, isLoading } = useQuery<
-    components["schemas"]["ChurchDetails"]
-  >({
-    queryKey: ["churchDetails", church.uuid],
-    queryFn: () => fetchApi(`/church/${church.uuid}`),
-    initialData: "schedules" in church ? church : undefined,
+  const queryClient = useQueryClient();
+
+  // When the server hands us full ChurchDetails (cold load or RSC payload
+  // arriving after a soft-nav loading state), write it into the cache *during
+  // render* so it overrides any partial seed left by a marker click. useQuery's
+  // `initialData` only applies when the cache is empty — without this, a stale
+  // seed would shadow the fresh server data until the next refetch.
+  const seededUuidRef = useRef<string | null>(null);
+  if (initialData && seededUuidRef.current !== uuid) {
+    seededUuidRef.current = uuid;
+    queryClient.setQueryData(["churchDetails", uuid], initialData);
+  }
+
+  const { data: churchDetails, isFetching } = useQuery<ChurchCacheEntry>({
+    queryKey: ["churchDetails", uuid],
+    queryFn: () => fetchApi(`/church/${uuid}`),
+    initialData,
+    initialDataUpdatedAt: initialData ? Date.now() : undefined,
   });
+
+  const fullDetails = isFullDetails(churchDetails) ? churchDetails : null;
 
   const eventsByDay = useMemo(() => {
     const events =
-      churchDetails?.events.sort(
+      churchDetails?.events.slice().sort(
         (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
       ) ?? [];
     const byDay: Record<string, EventOut[]> = {};
@@ -112,13 +136,13 @@ const ChurchCard = ({
   const eventsForDay = selectedDay ? (eventsByDay?.[selectedDay] ?? []) : [];
 
   const getSchedulesForEvent = (event: EventOut) => {
-    if (!churchDetails) return [];
+    if (!fullDetails) return [];
     const indices = new Set(event.schedules_indices);
-    return churchDetails.schedules.filter((_, i) => indices.has(i));
+    return fullDetails.schedules.filter((_, i) => indices.has(i));
   };
 
   const { upvotes, downvotes, comments } = useMemo(() => {
-    const reports = churchDetails?.website?.reports ?? [];
+    const reports = fullDetails?.website?.reports ?? [];
     let up = 0;
     let down = 0;
     const countVotes = (list: typeof reports) => {
@@ -152,9 +176,8 @@ const ChurchCard = ({
       downvotes: down,
       comments: buildComments(reports),
     };
-  }, [churchDetails?.website?.reports]);
+  }, [fullDetails?.website?.reports]);
 
-  const queryClient = useQueryClient();
   const [feedbackOpen, setFeedbackOpen] = useState<"good" | "error" | null>(
     null,
   );
@@ -171,7 +194,7 @@ const ChurchCard = ({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["churchDetails", church.uuid],
+        queryKey: ["churchDetails", uuid],
       });
       setFeedbackOpen(null);
       setFeedbackText("");
@@ -184,9 +207,10 @@ const ChurchCard = ({
   }, [feedbackOpen]);
 
   const handleFeedbackClick = (type: "good" | "error") => {
+    if (!churchDetails) return;
     posthog.capture(
       type === "good" ? "church_upvoted" : "church_downvoted",
-      { church_uuid: church.uuid, church_name: church.name },
+      { church_uuid: uuid, church_name: churchDetails.name },
     );
     setFeedbackOpen((current) => (current === type ? null : type));
     setFeedbackText("");
@@ -194,32 +218,67 @@ const ChurchCard = ({
   };
 
   const handleSubmitFeedback = () => {
-    if (!churchDetails?.website?.uuid || !feedbackOpen) return;
+    if (!fullDetails?.website?.uuid || !feedbackOpen) return;
     postReport.mutate({
-      website_uuid: churchDetails.website.uuid,
+      website_uuid: fullDetails.website.uuid,
       feedback_type: feedbackOpen,
       error_type: feedbackOpen === "error" ? errorType : null,
       comment: feedbackText.trim() || null,
     });
   };
 
-  const canReport = Boolean(churchDetails?.website?.uuid);
+  const canReport = Boolean(fullDetails?.website?.uuid);
 
   const searchParams = useSearchParams();
   const query = searchParams.toString();
+  const closeHref = query ? `/?${query}` : "/";
 
+  const trackedUuidRef = useRef<string | null>(null);
   useEffect(() => {
+    if (!churchDetails || trackedUuidRef.current === churchDetails.uuid) return;
+    trackedUuidRef.current = churchDetails.uuid;
     const prev = document.title;
-    document.title = `${church.name} — Confessio`;
+    document.title = `${churchDetails.name} — Confessio`;
     posthog.capture("church_viewed", {
-      church_uuid: church.uuid,
-      church_name: church.name,
-      church_city: church.city,
+      church_uuid: churchDetails.uuid,
+      church_name: churchDetails.name,
+      church_city: churchDetails.city,
     });
     return () => {
       document.title = prev;
     };
-  }, [church.name, church.uuid, church.city]);
+  }, [churchDetails]);
+
+  // Cold direct-URL visit, no seed, no SSR hydration: render only X + spinner.
+  if (!churchDetails) {
+    return (
+      <>
+        <ModalSheetDragZone>
+          <div className="px-5 pt-4 pb-3 flex items-start justify-end">
+            <Link
+              href={closeHref}
+              aria-label="Fermer"
+              className="shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors z-10"
+            >
+              <XIcon size={16} weight="bold" color="white" />
+            </Link>
+          </div>
+          <hr className="mx-0 border-0 h-px bg-white/12" />
+        </ModalSheetDragZone>
+        <ModalSheetScroller draggableAt="top">
+          <div className="flex items-center justify-center py-12">
+            <CircleNotchIcon
+              size={28}
+              color="white"
+              className="animate-spin"
+            />
+          </div>
+        </ModalSheetScroller>
+      </>
+    );
+  }
+
+  const showSchedulesSpinner = !fullDetails && isFetching;
 
   return (
     <>
@@ -227,10 +286,10 @@ const ChurchCard = ({
         <div className="px-5 pt-4 pb-3 flex flex-col gap-1.5">
           <span className="flex justify-between gap-2 items-start">
             <h3 className="text-white leading-[1.15] text-[22px] font-semibold tracking-[-0.01em]">
-              {church.name}
+              {churchDetails.name}
             </h3>
             <Link
-              href={`/?${query}`}
+              href={closeHref}
               aria-label="Fermer"
               className="shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors z-10"
             >
@@ -238,13 +297,13 @@ const ChurchCard = ({
             </Link>
           </span>
           <Link
-            href={`https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`}
+            href={`https://www.google.com/maps/dir/?api=1&destination=${churchDetails.latitude},${churchDetails.longitude}`}
             target="_blank"
             className="group inline-flex items-start gap-1.5 self-start text-[13px] leading-snug text-white/70 hover:text-white transition-colors"
             onClick={() =>
               posthog.capture("directions_opened", {
-                church_uuid: church.uuid,
-                church_name: church.name,
+                church_uuid: uuid,
+                church_name: churchDetails.name,
               })
             }
           >
@@ -254,7 +313,9 @@ const ChurchCard = ({
               className="mt-[3px] shrink-0 text-white/55 group-hover:text-white transition-colors"
             />
             <span className="whitespace-pre-line">
-              {[church.address, church.city].filter(Boolean).join("\n")}
+              {[churchDetails.address, churchDetails.city]
+                .filter(Boolean)
+                .join("\n")}
             </span>
           </Link>
         </div>
@@ -263,21 +324,21 @@ const ChurchCard = ({
       </ModalSheetDragZone>
 
       <ModalSheetScroller draggableAt="top">
-        {churchDetails?.website?.home_url && (
+        {fullDetails?.website?.home_url && (
           <div className="px-5 pt-3 pb-1 flex">
             <Link
-              href={churchDetails.website.home_url}
+              href={fullDetails.website.home_url}
               target="_blank"
               className="inline-flex items-center gap-1.5 text-[12px] font-medium text-white/75 hover:text-white transition-colors"
               onClick={() =>
                 posthog.capture("parish_website_clicked", {
-                  church_uuid: church.uuid,
-                  church_name: church.name,
-                  parish_url: churchDetails.website?.home_url,
+                  church_uuid: uuid,
+                  church_name: churchDetails.name,
+                  parish_url: fullDetails.website?.home_url,
                 })
               }
             >
-              <span>Paroisse de {church.name}</span>
+              <span>Paroisse de {churchDetails.name}</span>
               <ArrowSquareOutIcon
                 size={13}
                 weight="bold"
@@ -287,7 +348,7 @@ const ChurchCard = ({
           </div>
         )}
         <div className="pb-6 pt-2">
-          {isLoading && (
+          {showSchedulesSpinner && (
             <div className="flex items-center justify-center py-8">
               <CircleNotchIcon
                 size={24}
@@ -297,7 +358,7 @@ const ChurchCard = ({
             </div>
           )}
 
-          {churchDetails && dayKeys.length > 0 && (
+          {fullDetails && dayKeys.length > 0 && (
             <div className="mx-3">
               <div className="flex gap-0 overflow-x-auto snap-x snap-mandatory px-[calc(50%-40px)] scrollbar-hide">
                 {dayKeys.map((dayKey, i) => {
@@ -354,7 +415,7 @@ const ChurchCard = ({
                                   src.parsing_uuid,
                               )
                               .map((src) =>
-                                churchDetails.parsings.find(
+                                fullDetails.parsings.find(
                                   (p) => p.uuid === src.parsing_uuid,
                                 ),
                               )
@@ -571,13 +632,13 @@ const ChurchCard = ({
 
           <div className="text-center px-4">
             <Link
-              href={`https://confessio.fr/paroisse/${churchDetails?.website?.uuid}#feedbackForm`}
+              href={`https://confessio.fr/paroisse/${fullDetails?.website?.uuid}#feedbackForm`}
               target="_blank"
               className="inline-block underline underline-offset-4 decoration-white/30 hover:decoration-white/70 text-white/75 hover:text-white text-[13px] transition-colors"
               onClick={() =>
                 posthog.capture("contribution_link_clicked", {
-                  church_uuid: church.uuid,
-                  church_name: church.name,
+                  church_uuid: uuid,
+                  church_name: churchDetails.name,
                 })
               }
             >
@@ -585,7 +646,7 @@ const ChurchCard = ({
             </Link>
           </div>
 
-          {!isLoading && churchDetails && dayKeys.length === 0 && (
+          {fullDetails && dayKeys.length === 0 && (
             <p className="text-center text-white/55 py-6 text-sm">
               Aucun horaire disponible
             </p>

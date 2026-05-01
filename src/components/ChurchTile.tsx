@@ -2,6 +2,8 @@
 import { AggregatedSearchResults } from "@/utils";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { components } from "@/types";
 
 const formatDayLabel = (dateString: string) => {
   const date = new Date(dateString);
@@ -32,6 +34,7 @@ const ChurchTile = ({
 }) => {
   const searchParams = useSearchParams();
   const query = searchParams.toString();
+  const queryClient = useQueryClient();
   const events = church.eventsByDay;
   if (events === undefined || Object.keys(events).length === 0) return null;
   const entries = Object.entries(events);
@@ -39,10 +42,29 @@ const ChurchTile = ({
   const soleEvent =
     totalEvents === 1 ? entries[0]?.[1][0] ?? null : null;
 
+  const handleClick = () => {
+    const existing = queryClient.getQueryData<
+      | components["schemas"]["ChurchDetails"]
+      | components["schemas"]["ChurchOut"]
+    >(["churchDetails", church.uuid]);
+    if (existing && "schedules" in existing) return;
+    queryClient.setQueryData(["churchDetails", church.uuid], {
+      uuid: church.uuid,
+      name: church.name,
+      address: church.address,
+      zipcode: church.zipcode,
+      city: church.city,
+      latitude: church.latitude,
+      longitude: church.longitude,
+      events: church.events,
+    });
+  };
+
   return (
     <Link
       href={query ? `/church/${church.uuid}?${query}` : `/church/${church.uuid}`}
       key={church.uuid}
+      onClick={handleClick}
       className="w-full bg-paper border border-hairline rounded-2xl px-4 py-3 block transition-shadow hover:shadow-[0_4px_14px_-6px_rgba(36,46,76,0.18)] active:scale-[0.995]"
     >
       <div className="flex items-start gap-3">
