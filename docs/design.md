@@ -203,3 +203,8 @@ would dilute the signal.
 6. **Match Google Maps where it matters.** Search pill at top, bottom sheet
    on mobile, tap-to-select pin, card slides up from bottom. Deviate only
    with explicit reason.
+7. **External source attributions may use the source's brand color**, scoped
+   strictly to the icon glyph and pill outline. Never on backgrounds, body
+   text, or other Confessio chrome — the color is *attribution*, not styling.
+   Today: OClocher uses `#609E2E` on a transparent outlined pill (see
+   `ChurchCard.tsx`).

@@ -4,9 +4,10 @@ import { Map } from "leaflet";
 import Image from "next/image";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { NavigationModal } from "./NavigationModal";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAtom } from "jotai";
 import { isSearchFocusedAtom } from "@/atoms";
+import { useMapRouter } from "@/hooks/useMapRouter";
 import {
   ArrowLeftIcon,
   BuildingsIcon,
@@ -38,7 +39,7 @@ export const SearchInput = ({
   setSearchQuery: (query: string) => void;
 }) => {
   const [isFocused, setIsFocused] = useAtom(isSearchFocusedAtom);
-  const router = useRouter();
+  const router = useMapRouter();
   const pathname = usePathname();
   const [isNavigationModalOpen, setIsNavigationModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -225,7 +226,7 @@ export const SearchInput = ({
                 <li key={index} className="p-2">
                   {item.type === "church" && item.uuid ? (
                     <button
-                      onMouseDown={(e) => e.preventDefault()}
+                      onPointerDown={(e) => e.preventDefault()}
                       onClick={() => {
                         posthog.capture("search_result_selected", {
                           result_type: item.type,
@@ -253,7 +254,7 @@ export const SearchInput = ({
                     </button>
                   ) : (
                     <button
-                      onMouseDown={(e) => e.preventDefault()}
+                      onPointerDown={(e) => e.preventDefault()}
                       onClick={() => {
                         posthog.capture("search_result_selected", {
                           result_type: item.type,

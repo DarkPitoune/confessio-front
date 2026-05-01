@@ -13,3 +13,17 @@ When in doubt, default to the existing tokens in `src/app/globals.css`
 
 If a UI change contradicts a rule in `docs/design.md`, flag it and either
 update the doc (if the rule should evolve) or revise the change.
+
+## Testing
+
+See `docs/testing.md` for the full workflow.
+
+- Automated SEO smoke tests live in `tests/seo.spec.ts` and run via
+  `pnpm test:seo` (full build + run) or `pnpm test:seo:only` (run only).
+  Run them after any change to page metadata, `sitemap.ts`, the diocese
+  or church routes, or anything in `src/lib/jsonld.ts`. Tests run on
+  port **3100** to avoid colliding with `next dev`.
+- Manual mobile QA before each prod release: copy
+  `docs/manual-tests/mobile-pre-release.md` into
+  `docs/manual-tests/runs/YYYY-MM-DD.md`, run both device passes,
+  commit the filled file.
