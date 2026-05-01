@@ -1,6 +1,7 @@
 import { components } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import ModalSheetDragZone from "./ModalSheet/ModalSheetDragZone";
 import { fetchApi, getFrenchTimeString } from "@/utils";
@@ -35,6 +36,31 @@ const ERROR_TYPE_LABELS: Record<ErrorType, string> = {
   paragraphs: "Texte incorrect",
 };
 
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+const renderCommentBody = (raw: string) => {
+  const text = raw.replace(/\\r\\n|\\r|\\n/g, "\n");
+  return text.split(URL_REGEX).map((part, i) => {
+    if (!/^https?:\/\//.test(part)) return part;
+    const trailingMatch = part.match(/[.,;:!?)\]]+$/);
+    const trailing = trailingMatch ? trailingMatch[0] : "";
+    const url = trailing ? part.slice(0, -trailing.length) : part;
+    return (
+      <span key={i}>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-deepblue underline underline-offset-2 hover:text-deepblue/70"
+        >
+          {url}
+        </a>
+        {trailing}
+      </span>
+    );
+  });
+};
+
 const CommentEntry = ({ node }: { node: CommentNode }) => (
   <div className="flex flex-col gap-0.5">
     <span className="tabular text-deepblue/50 text-[11px] font-medium">
@@ -44,7 +70,9 @@ const CommentEntry = ({ node }: { node: CommentNode }) => (
         year: "numeric",
       })}
     </span>
-    <p className="text-ink text-[13px] leading-normal">{node.comment}</p>
+    <p className="text-ink text-[13px] leading-normal whitespace-pre-line [overflow-wrap:anywhere]">
+      {renderCommentBody(node.comment)}
+    </p>
     {node.children.length > 0 && (
       <div className="mt-3 pl-4 border-l border-ink/15 flex flex-col gap-2">
         {node.children.map((child, i) => (
@@ -161,6 +189,44 @@ const ChurchCard = ({
   const [feedbackText, setFeedbackText] = useState("");
   const [errorType, setErrorType] = useState<ErrorType | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [portalReady, setPortalReady] = useState(false);
+  const lightboxClosedByBackRef = useRef(false);
+  useEffect(() => setPortalReady(true), []);
+
+  useEffect(() => {
+    if (!lightboxUrl) return;
+    lightboxClosedByBackRef.current = false;
+    // Push a no-URL history entry so the OS/browser back button closes the
+    // lightbox first instead of leaving the church card.
+    window.history.pushState({ confessioLightbox: true }, "");
+    const onPopState = () => {
+      lightboxClosedByBackRef.current = true;
+      setLightboxUrl(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxUrl(null);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("popstate", onPopState);
+      document.body.style.overflow = prevOverflow;
+      // If closed via UI (X / backdrop / Escape), consume the history entry
+      // we pushed — but only if it's still on top. If a route navigation
+      // (e.g. closing the church card) happened first, our entry is buried
+      // and calling back() would surface it again.
+      if (
+        !lightboxClosedByBackRef.current &&
+        window.history.state?.confessioLightbox
+      ) {
+        window.history.back();
+      }
+    };
+  }, [lightboxUrl]);
 
   const postReport = useMutation({
     mutationFn: async (payload: components["schemas"]["ReportIn"]) =>
@@ -359,9 +425,10 @@ const ChurchCard = ({
                                 ),
                               )
                               .find((p) => p?.scraping_url || p?.image_url);
-                            const sourceUrl =
-                              sourceParsing?.scraping_url ??
-                              sourceParsing?.image_url;
+                            const pageUrl = sourceParsing?.scraping_url ?? null;
+                            const imageUrl = !pageUrl
+                              ? (sourceParsing?.image_url ?? null)
+                              : null;
                             const hasOclocher = s.sources.some(
                               (src) => src.source_type === "oclocher",
                             );
@@ -388,9 +455,36 @@ const ChurchCard = ({
                                     </span>
                                   </div>
                                 )}
-                                {sourceUrl && (
+                                {imageUrl && (
+                                  <div className="flex justify-end">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setLightboxUrl(imageUrl);
+                                        posthog.capture(
+                                          "source_image_opened",
+                                          {
+                                            church_uuid: church.uuid,
+                                            url: imageUrl,
+                                          },
+                                        );
+                                      }}
+                                      aria-label="Voir la source"
+                                      className="block w-12 h-12 rounded-lg overflow-hidden border border-ink/10 hover:border-deepblue/40 transition-colors bg-paper"
+                                    >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={imageUrl}
+                                        alt="Aperçu de la source"
+                                        loading="lazy"
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </button>
+                                  </div>
+                                )}
+                                {pageUrl && (
                                   <Link
-                                    href={sourceUrl}
+                                    href={pageUrl}
                                     target="_blank"
                                     className="text-deepblue/50 hover:text-deepblue block text-right text-[12px]"
                                   >
@@ -592,6 +686,42 @@ const ChurchCard = ({
           )}
         </div>
       </ModalSheetScroller>
+      {portalReady &&
+        lightboxUrl &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-deepblue/90 z-[1000] flex items-center justify-center p-4"
+            onClick={() => setLightboxUrl(null)}
+            role="dialog"
+            aria-modal="true"
+          >
+            <button
+              type="button"
+              onClick={() => setLightboxUrl(null)}
+              aria-label="Fermer"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            >
+              <XIcon size={18} weight="bold" color="white" />
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={lightboxUrl}
+              alt="Source"
+              className="max-w-full max-h-full object-contain rounded-xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <Link
+              href={lightboxUrl}
+              target="_blank"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-4 inline-flex items-center gap-1.5 text-white/75 hover:text-white text-[13px] underline underline-offset-4 decoration-white/30 hover:decoration-white/70 transition-colors"
+            >
+              Ouvrir dans un nouvel onglet
+              <ArrowSquareOutIcon size={14} weight="bold" />
+            </Link>
+          </div>,
+          document.body,
+        )}
     </>
   );
 };
