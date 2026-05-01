@@ -12,6 +12,7 @@ import {
   CircleNotchIcon,
   NavigationArrowIcon,
   PaperPlaneTiltIcon,
+  SealCheckIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   XIcon,
@@ -361,19 +362,42 @@ const ChurchCard = ({
                             const sourceUrl =
                               sourceParsing?.scraping_url ??
                               sourceParsing?.image_url;
+                            const hasOclocher = s.sources.some(
+                              (src) => src.source_type === "oclocher",
+                            );
                             return (
-                              <p key={j} className="whitespace-pre-line">
-                                {s.explanation}
+                              <div
+                                key={j}
+                                className="whitespace-pre-line flex flex-col gap-1"
+                              >
+                                <p>{s.explanation}</p>
+                                {hasOclocher && (
+                                  <div className="flex justify-end">
+                                    <span
+                                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 border select-none"
+                                      style={{
+                                        borderColor: "#609E2E",
+                                        color: "#609E2E",
+                                      }}
+                                      title="Source vérifiée par OClocher"
+                                    >
+                                      <SealCheckIcon size={12} weight="fill" />
+                                      <span className="text-[11px] font-medium tracking-tight">
+                                        OClocher
+                                      </span>
+                                    </span>
+                                  </div>
+                                )}
                                 {sourceUrl && (
                                   <Link
                                     href={sourceUrl}
                                     target="_blank"
-                                    className="text-deepblue/50 hover:text-deepblue block text-right text-[12px] mt-1"
+                                    className="text-deepblue/50 hover:text-deepblue block text-right text-[12px]"
                                   >
                                     Source ↗
                                   </Link>
                                 )}
-                              </p>
+                              </div>
                             );
                           })}
                         </div>

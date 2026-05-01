@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
+    "test:seo": "next build && playwright test",
+    "test:seo:only": "playwright test",
     "pull-types": "openapi-typescript https://confessio.fr/front/api/openapi.json -o src/types.d.ts"
   },
   "dependencies": {

@@ -1,7 +1,7 @@
 import { AggregatedSearchResults, getFrenchTimeString } from "@/utils";
 import L, { Map, Marker as LeafletMarker } from "leaflet";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { useMapRouter } from "@/hooks/useMapRouter";
 
 export const ChurchMarker = ({
   map,
@@ -12,7 +12,7 @@ export const ChurchMarker = ({
   church: AggregatedSearchResults["churches"][number];
   selected: boolean;
 }) => {
-  const router = useRouter();
+  const router = useMapRouter();
   const markerRef = useRef<LeafletMarker | null>(null);
 
   const firstDayFirstEvent = Object.values(

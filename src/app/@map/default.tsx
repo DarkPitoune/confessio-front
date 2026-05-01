@@ -11,8 +11,9 @@ import { CrosshairSimpleIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useMapBounds } from "@/hooks/useMapBounds";
 import { useSearchResults } from "@/hooks/useSearchResults";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
+import { clearNavigationPending } from "@/lib/navigationLock";
 
 const Map = dynamic(() => import("../../components/Map/Map"), {
   loading: () => (
@@ -33,7 +34,13 @@ export function HomePage({
   const [searchQuery, setSearchQuery] = useState("");
   const { setBounds } = useMapBounds();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const initialBounds = serverBounds ?? parseBoundsParam(searchParams.get("bounds"));
+
+  // Release the navigation lock as soon as the new pathname is committed.
+  useEffect(() => {
+    clearNavigationPending();
+  }, [pathname]);
 
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
@@ -62,8 +69,7 @@ export function HomePage({
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: searchResults, isFetching: isSearchResultsFetching } =
-    useSearchResults();
+  const { data: searchResults } = useSearchResults();
 
   useEffect(
     function attachMapMoveHandler() {
@@ -109,7 +115,6 @@ export function HomePage({
         isLoading={
           isLoading ||
           isFetching ||
-          isSearchResultsFetching ||
           searchQuery !== debouncedSearchQuery
         }
         data={data || []}

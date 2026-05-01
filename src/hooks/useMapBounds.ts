@@ -1,6 +1,7 @@
 import { parseBoundsParam, type Bounds } from "@/utils";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useCallback } from "react";
+import { isNavigationPending } from "@/lib/navigationLock";
 
 type MapBoundsContext = {
   bounds: Bounds | null;
@@ -19,6 +20,10 @@ export const useMapBounds = (): MapBoundsContext => {
   // Sync URL when bounds change
   const setBounds = useCallback((newBounds: Bounds) => {
     if (!newBounds) return;
+    // While a router.push transition is in flight, skip the URL sync.
+    // Otherwise replaceState here clobbers the history entry the transition
+    // is racing to commit, silently aborting the navigation.
+    if (isNavigationPending()) return;
     const south = newBounds.south.toFixed(6);
     const west = newBounds.west.toFixed(6);
     const north = newBounds.north.toFixed(6);
