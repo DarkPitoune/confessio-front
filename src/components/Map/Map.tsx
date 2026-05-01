@@ -45,23 +45,34 @@ const Map = ({
     (c) => c.uuid === selectedChurchUuid,
   );
 
-  // Fetch selected church details to center map and ensure marker stays visible
+  // Fetch selected church details to center map and ensure marker stays visible.
+  // The cache may hold either a partial seed (ChurchOut) or full ChurchDetails;
+  // both are sufficient for centering and rendering the fallback marker.
   const { data: selectedChurchDetails } = useQuery<
-    components["schemas"]["ChurchDetails"]
+    | components["schemas"]["ChurchDetails"]
+    | components["schemas"]["ChurchOut"]
   >({
     queryKey: ["churchDetails", selectedChurchUuid],
     queryFn: () => fetchApi(`/church/${selectedChurchUuid}`),
     enabled: !!selectedChurchUuid,
   });
 
+  const selectedChurchLat = selectedChurchDetails?.latitude;
+  const selectedChurchLng = selectedChurchDetails?.longitude;
+
   useEffect(() => {
-    if (mapInstanceRef.current && selectedChurchDetails && !initialBounds) {
+    if (
+      mapInstanceRef.current &&
+      selectedChurchLat !== undefined &&
+      selectedChurchLng !== undefined &&
+      !initialBounds
+    ) {
       mapInstanceRef.current.setView(
-        [selectedChurchDetails.latitude, selectedChurchDetails.longitude],
+        [selectedChurchLat, selectedChurchLng],
         16,
       );
     }
-  }, [selectedChurchDetails, initialBounds]);
+  }, [selectedChurchLat, selectedChurchLng, initialBounds]);
 
   // Center map when a ?center=lat,lng param is present (from search/marker click)
   useEffect(() => {

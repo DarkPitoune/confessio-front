@@ -6,36 +6,48 @@ import { ChurchCard } from "./ChurchCard";
 import ModalSheetContainer from "./ModalSheet/ModalSheetContainer";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import ModalSheetDragZone from "./ModalSheet/ModalSheetDragZone";
-import { AggregatedSearchResults } from "@/utils";
 import ChurchTile from "./ChurchTile";
 import { useDateFilter } from "@/hooks/useDateFilter";
-import { components } from "@/types";
 import { useSearchResults } from "@/hooks/useSearchResults";
+import { AggregatedSearchResults } from "@/utils";
+import { components } from "@/types";
+
+const SKELETON_TILE_COUNT = 6;
+
+function ChurchTileSkeleton() {
+  return (
+    <div className="w-full bg-paper/40 border border-hairline/30 rounded-2xl px-4 py-3 animate-pulse">
+      <div className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="h-4 w-2/3 rounded bg-white/15" />
+          <div className="mt-2 h-3 w-1/2 rounded bg-white/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ModalSheet({
-  originalSearchResults,
-  selectedChurch,
+  selectedChurchUuid,
+  initialChurchDetails,
+  initialSearchResults,
 }: {
-  originalSearchResults?: AggregatedSearchResults | null | undefined;
-  selectedChurch?: components["schemas"]["ChurchDetails"];
+  selectedChurchUuid?: string;
+  initialChurchDetails?: components["schemas"]["ChurchDetails"];
+  initialSearchResults?: AggregatedSearchResults | null;
 }) {
-  // URL is the single source of truth - use the church from server if present
   const { date, setDate } = useDateFilter();
   const sheetRef = useSheetRef();
-  const { data: searchResults } = useSearchResults();
-
-  const displayedSearchResults = searchResults
-    ? searchResults
-    : originalSearchResults;
+  const { data: searchResults } = useSearchResults(initialSearchResults);
 
   useEffect(() => {
-    if (selectedChurch) sheetRef?.current?.snapTo(1);
-  }, [selectedChurch]);
+    if (selectedChurchUuid) sheetRef?.current?.snapTo(1);
+  }, [selectedChurchUuid, sheetRef]);
 
   return (
     <ModalSheetContainer>
-      {selectedChurch ? (
-        <ChurchCard church={selectedChurch} />
+      {selectedChurchUuid ? (
+        <ChurchCard uuid={selectedChurchUuid} initialData={initialChurchDetails} />
       ) : (
         <>
           <ModalSheetDragZone>
@@ -66,9 +78,13 @@ function ModalSheet({
           </ModalSheetDragZone>
           <ModalSheetScroller draggableAt="top">
             <div className="p-4 space-y-4">
-              {displayedSearchResults?.churches?.map((church) => (
-                <ChurchTile key={church.uuid} church={church} />
-              ))}
+              {searchResults === undefined
+                ? Array.from({ length: SKELETON_TILE_COUNT }).map((_, i) => (
+                    <ChurchTileSkeleton key={i} />
+                  ))
+                : searchResults?.churches?.map((church) => (
+                    <ChurchTile key={church.uuid} church={church} />
+                  ))}
               <div className="flex items-center justify-center gap-2 py-4">
                 <span className="text-white text-xs">Un projet généreusement encouragé par</span>
                 <a href="https://hozana.org" target="_blank" rel="noopener noreferrer">

@@ -2,17 +2,41 @@ import { AggregatedSearchResults, getFrenchTimeString } from "@/utils";
 import L, { Map, Marker as LeafletMarker } from "leaflet";
 import { useEffect, useRef } from "react";
 import { useMapRouter } from "@/hooks/useMapRouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { components } from "@/types";
+
+const seedChurchDetails = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  church: AggregatedSearchResults["churches"][number],
+) => {
+  const existing = queryClient.getQueryData<
+    components["schemas"]["ChurchDetails"] | components["schemas"]["ChurchOut"]
+  >(["churchDetails", church.uuid]);
+  if (existing && "schedules" in existing) return;
+  queryClient.setQueryData(["churchDetails", church.uuid], {
+    uuid: church.uuid,
+    name: church.name,
+    address: church.address,
+    zipcode: church.zipcode,
+    city: church.city,
+    latitude: church.latitude,
+    longitude: church.longitude,
+    events: church.events,
+  });
+};
 
 export const ChurchMarker = ({
   map,
-  church: { uuid, latitude, longitude, eventsByDay },
+  church,
   selected,
 }: {
   map: Map;
   church: AggregatedSearchResults["churches"][number];
   selected: boolean;
 }) => {
+  const { uuid, latitude, longitude, eventsByDay } = church;
   const router = useMapRouter();
+  const queryClient = useQueryClient();
   const markerRef = useRef<LeafletMarker | null>(null);
 
   const firstDayFirstEvent = Object.values(
@@ -24,6 +48,13 @@ export const ChurchMarker = ({
 
   useEffect(() => {
     let marker: LeafletMarker;
+
+    const handleClick = () => {
+      seedChurchDetails(queryClient, church);
+      const params = new URLSearchParams(window.location.search);
+      params.set("center", `${latitude},${longitude}`);
+      router.push(`/church/${uuid}?${params.toString()}`);
+    };
 
     if (timeLabel === null) {
       const emptySize = selected ? 20 : 14;
@@ -38,11 +69,7 @@ export const ChurchMarker = ({
         zIndexOffset: selected ? 1000 : 0,
       })
         .addTo(map)
-        .on("click", () => {
-          const params = new URLSearchParams(window.location.search);
-          params.set("center", `${latitude},${longitude}`);
-          router.push(`/church/${uuid}?${params.toString()}`);
-        });
+        .on("click", handleClick);
     } else {
       const markerClass = selected ? "church-marker-selected" : "church-marker";
       const size: [number, number] = selected ? [58, 28] : [50, 24];
@@ -57,18 +84,14 @@ export const ChurchMarker = ({
         zIndexOffset: selected ? 1000 : 0,
       })
         .addTo(map)
-        .on("click", () => {
-          const params = new URLSearchParams(window.location.search);
-          params.set("center", `${latitude},${longitude}`);
-          router.push(`/church/${uuid}?${params.toString()}`);
-        });
+        .on("click", handleClick);
     }
 
     markerRef.current = marker;
     return () => {
       marker.remove();
     };
-  }, [map, router, uuid, latitude, longitude, timeLabel, selected]);
+  }, [map, router, queryClient, church, uuid, latitude, longitude, timeLabel, selected]);
 
   useEffect(() => {
     if (!markerRef.current) return;

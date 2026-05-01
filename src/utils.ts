@@ -138,6 +138,18 @@ export const dioceseToBounds = (
 export const boundsToString = (bounds: Bounds): string =>
   `${bounds.south.toFixed(6)},${bounds.west.toFixed(6)},${bounds.north.toFixed(6)},${bounds.east.toFixed(6)}`;
 
+export const buildSearchResultsQueryKey = (
+  bounds: Bounds | null | undefined,
+  dateFilter: string | null,
+) => [
+  "churches",
+  bounds?.south,
+  bounds?.west,
+  bounds?.north,
+  bounds?.east,
+  dateFilter,
+];
+
 export const parseBoundsParam = (boundsParam: string | null): Bounds | null => {
   if (!boundsParam) return null;
 

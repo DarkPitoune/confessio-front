@@ -6,17 +6,20 @@ import { AggregatedSearchResults } from "@/utils";
 import { components } from "@/types";
 
 function ModalSheetWrapper({
-  originalSearchResults,
-  selectedChurch,
+  selectedChurchUuid,
+  initialChurchDetails,
+  initialSearchResults,
 }: {
-  originalSearchResults?: AggregatedSearchResults | null | undefined;
-  selectedChurch?: components["schemas"]["ChurchDetails"];
+  selectedChurchUuid?: string;
+  initialChurchDetails?: components["schemas"]["ChurchDetails"];
+  initialSearchResults?: AggregatedSearchResults | null;
 }) {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={null}>
       <ModalSheet
-        originalSearchResults={originalSearchResults}
-        selectedChurch={selectedChurch}
+        selectedChurchUuid={selectedChurchUuid}
+        initialChurchDetails={initialChurchDetails}
+        initialSearchResults={initialSearchResults}
       />
     </Suspense>
   );
