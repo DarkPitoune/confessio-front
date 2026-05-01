@@ -4,14 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchInput } from "@/components/SearchInput";
 import { components } from "@/types";
 import { type Bounds, fetchApi, parseBoundsParam } from "@/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { Map as LeafletMap } from "leaflet";
 import { CrosshairSimpleIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useMapBounds } from "@/hooks/useMapBounds";
 import { useSearchResults } from "@/hooks/useSearchResults";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { clearNavigationPending } from "@/lib/navigationLock";
 
@@ -35,6 +35,7 @@ export function HomePage({
   const { setBounds } = useMapBounds();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const router = useRouter();
   const initialBounds = serverBounds ?? parseBoundsParam(searchParams.get("bounds"));
 
   // Release the navigation lock as soon as the new pathname is committed.
@@ -70,6 +71,19 @@ export function HomePage({
   });
 
   const { data: searchResults } = useSearchResults();
+
+  // Prefetch the /church/[uuid] route's JS chunk on first map load so the
+  // first marker click doesn't wait on a code-split download. The chunk is
+  // identical for every uuid — any one warmed entry caches it for all
+  // subsequent clicks. We only fire this once per session, on the first uuid
+  // available from the search results.
+  const chunkPrefetchedRef = useRef(false);
+  const firstChurchUuid = searchResults?.churches?.[0]?.uuid;
+  useEffect(() => {
+    if (chunkPrefetchedRef.current || !firstChurchUuid) return;
+    chunkPrefetchedRef.current = true;
+    router.prefetch(`/church/${firstChurchUuid}`);
+  }, [firstChurchUuid, router]);
 
   useEffect(
     function attachMapMoveHandler() {
