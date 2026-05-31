@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
 const NavigationModal = ({
   isOpen,
@@ -8,16 +9,34 @@ const NavigationModal = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  if (!isOpen) return null;
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isOpen && !dialog.open) {
+      dialog.showModal();
+    } else if (!isOpen && dialog.open) {
+      dialog.close();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.addEventListener("close", onClose);
+    return () => dialog.removeEventListener("close", onClose);
+  }, [onClose]);
+
   return (
-    <div
-      className="fixed inset-0 bg-deepblue/90 z-50 flex items-center justify-center"
-      onClick={onClose}
+    <dialog
+      ref={dialogRef}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) dialogRef.current.close();
+      }}
+      className="m-auto border-0 bg-transparent p-0 backdrop:bg-deepblue/90"
     >
-      <div
-        className="rounded-xl py-4 px-8 bg-deepblue gap-4 flex flex-col items-stretch justify-center w-4/5 max-w-96"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="rounded-xl py-4 px-8 bg-deepblue gap-4 flex flex-col items-stretch justify-center w-[80vw] max-w-96">
         <div className="flex gap-2 items-center justify-center">
           <Image
             src="/confessioLogoWhite.svg"
@@ -77,7 +96,7 @@ const NavigationModal = ({
           </a>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 };
 
