@@ -88,6 +88,14 @@ const NavigationModal = ({
           </Link>
           <br />
           Made in 🇫🇷 with ✝️ without 🍪
+          {process.env.NEXT_PUBLIC_APP_VERSION && (
+            <>
+              <br />
+              <span className="tabular">
+                v{process.env.NEXT_PUBLIC_APP_VERSION}
+              </span>
+            </>
+          )}
         </p>
         <div className="flex flex-col items-center justify-center gap-2">
           <span className="text-xs text-gray-300">Un projet généreusement encouragé par</span>

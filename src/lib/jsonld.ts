@@ -1,6 +1,7 @@
 import { components } from "@/types";
+import { SITE_URL } from "@/utils";
 
-const BASE_URL = "https://new.confessio.fr";
+const BASE_URL = SITE_URL;
 
 type ChurchDetails = components["schemas"]["ChurchDetails"];
 
