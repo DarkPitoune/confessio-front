@@ -4,6 +4,7 @@ import "./globals.css";
 import clsx from "clsx";
 import type { Metadata } from "next";
 import { WEBSITE_JSONLD } from "@/lib/jsonld";
+import { SITE_URL } from "@/utils";
 
 const dmSans = DM_Sans({
   variable: "--font-sans",
@@ -13,7 +14,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://new.confessio.fr"),
+  metadataBase: new URL(SITE_URL),
   title: "Confessio — Trouver une confession près de chez vous",
   description:
     "Trouvez les horaires de confession catholique près de chez vous. Lieux, horaires et informations pratiques.",

@@ -60,6 +60,22 @@ For Vercel deployment:
 
 See [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for other deployment options.
 
+## Releasing
+
+Version is single-sourced from `package.json` and exposed to the UI and
+`/api/health` at build time (`NEXT_PUBLIC_APP_VERSION`).
+
+To cut a release:
+
+1. Add the changes under `## [Unreleased]` in `CHANGELOG.md`, then rename that
+   heading to the new version.
+2. `pnpm version <patch|minor|major>` — bumps `package.json` and creates the
+   matching `vX.Y.Z` git tag.
+3. `git push && git push --tags`.
+
+On `confessio.fr` the poller (`scripts/poll.sh`) picks up the new commit on
+`main` and runs `scripts/deploy.sh`.
+
 ## API Documentation
 
 Backend API documentation is available at [https://confessio.fr/front/api/docs#/](https://confessio.fr/front/api/docs#/).
