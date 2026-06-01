@@ -2,6 +2,11 @@ import { cache } from "react";
 import { components } from "./types";
 
 const API_URL = "https://confessio.fr/front/api";
+
+// Overridable on non-prod hosts (e.g. a test domain) via NEXT_PUBLIC_SITE_URL.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://confessio.fr";
+
 export const MAP_TILER_API_KEY = process.env.NEXT_PUBLIC_MAP_TILER_API_KEY;
 if (MAP_TILER_API_KEY === undefined)
   console.error("MAP_TILER_API_KEY is undefined");

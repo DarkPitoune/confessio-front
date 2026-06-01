@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { fetchChurchesWithWebsites, fetchDioceses } from "@/utils";
+import { fetchChurchesWithWebsites, fetchDioceses, SITE_URL } from "@/utils";
 
-const BASE_URL = "https://new.confessio.fr";
+const BASE_URL = SITE_URL;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [{ churches }, dioceses] = await Promise.all([
