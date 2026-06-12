@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import ModalSheetScroller from "./ModalSheet/ModalSheetScroller";
 import ModalSheetDragZone from "./ModalSheet/ModalSheetDragZone";
-import { fetchApi, getFrenchTimeString } from "@/utils";
+import { CHURCH_DETAILS_STALE_TIME, fetchApi, getFrenchTimeString } from "@/utils";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import posthog from "posthog-js";
@@ -116,6 +116,7 @@ const ChurchCard = ({
     queryKey: ["churchDetails", church.uuid],
     queryFn: () => fetchApi(`/church/${church.uuid}`),
     initialData: "schedules" in church ? church : undefined,
+    staleTime: CHURCH_DETAILS_STALE_TIME,
   });
 
   const eventsByDay = useMemo(() => {

@@ -2,17 +2,20 @@ import { AggregatedSearchResults, getFrenchTimeString } from "@/utils";
 import L, { Map, Marker as LeafletMarker } from "leaflet";
 import { useEffect, useRef } from "react";
 import { useMapRouter } from "@/hooks/useMapRouter";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const ChurchMarker = ({
   map,
-  church: { uuid, latitude, longitude, eventsByDay },
+  church,
   selected,
 }: {
   map: Map;
   church: AggregatedSearchResults["churches"][number];
   selected: boolean;
 }) => {
+  const { uuid, latitude, longitude, eventsByDay } = church;
   const router = useMapRouter();
+  const queryClient = useQueryClient();
   const markerRef = useRef<LeafletMarker | null>(null);
 
   const firstDayFirstEvent = Object.values(
@@ -24,6 +27,20 @@ export const ChurchMarker = ({
 
   useEffect(() => {
     let marker: LeafletMarker;
+
+    const buildHref = () => {
+      const params = new URLSearchParams(window.location.search);
+      params.set("center", `${latitude},${longitude}`);
+      return `/church/${uuid}?${params.toString()}`;
+    };
+    const navigate = () => router.push(buildHref());
+    // Fires ~100-300ms before click (mouse and touch): seed the lightweight
+    // church so the loading fallback can render its header instantly, and
+    // prefetch the route so the modal's loading boundary is already warm.
+    const warm = () => {
+      queryClient.setQueryData(["churchDetails", uuid], (prev) => prev ?? church);
+      router.prefetch(buildHref());
+    };
 
     if (timeLabel === null) {
       const emptySize = selected ? 20 : 14;
@@ -38,11 +55,8 @@ export const ChurchMarker = ({
         zIndexOffset: selected ? 1000 : 0,
       })
         .addTo(map)
-        .on("click", () => {
-          const params = new URLSearchParams(window.location.search);
-          params.set("center", `${latitude},${longitude}`);
-          router.push(`/church/${uuid}?${params.toString()}`);
-        });
+        .on("click", navigate)
+        .on("mousedown", warm);
     } else {
       const markerClass = selected ? "church-marker-selected" : "church-marker";
       const size: [number, number] = selected ? [58, 28] : [50, 24];
@@ -57,18 +71,25 @@ export const ChurchMarker = ({
         zIndexOffset: selected ? 1000 : 0,
       })
         .addTo(map)
-        .on("click", () => {
-          const params = new URLSearchParams(window.location.search);
-          params.set("center", `${latitude},${longitude}`);
-          router.push(`/church/${uuid}?${params.toString()}`);
-        });
+        .on("click", navigate)
+        .on("mousedown", warm);
     }
 
     markerRef.current = marker;
     return () => {
       marker.remove();
     };
-  }, [map, router, uuid, latitude, longitude, timeLabel, selected]);
+  }, [
+    map,
+    router,
+    queryClient,
+    church,
+    uuid,
+    latitude,
+    longitude,
+    timeLabel,
+    selected,
+  ]);
 
   useEffect(() => {
     if (!markerRef.current) return;

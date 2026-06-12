@@ -1,5 +1,5 @@
 import { components } from "@/types";
-import { AggregatedSearchResults, Bounds, computeEventsByDay, fetchApi, MAP_TILER_API_KEY, MOBILE_BREAKPOINT } from "@/utils";
+import { AggregatedSearchResults, Bounds, CHURCH_DETAILS_STALE_TIME, computeEventsByDay, fetchApi, MAP_TILER_API_KEY, MOBILE_BREAKPOINT } from "@/utils";
 import { MaptilerLayer } from "@maptiler/leaflet-maptilersdk";
 import L, { Map as LeafletMap } from "leaflet";
 import "leaflet-defaulticon-compatibility";
@@ -52,6 +52,7 @@ const Map = ({
     queryKey: ["churchDetails", selectedChurchUuid],
     queryFn: () => fetchApi(`/church/${selectedChurchUuid}`),
     enabled: !!selectedChurchUuid,
+    staleTime: CHURCH_DETAILS_STALE_TIME,
   });
 
   useEffect(() => {

@@ -8,10 +8,11 @@ import { markNavigationPending } from "@/lib/navigationLock";
 // replaceState can't clobber the in-flight router transition. See
 // src/lib/navigationLock.ts and src/hooks/useMapBounds.ts.
 //
-// Only push/replace are wrapped — the other router methods (back, forward,
-// refresh, prefetch) aren't currently used from map-mounted components; if
-// you need one and it triggers a transition, extend this hook rather than
-// reaching for useRouter directly.
+// push/replace engage the navigation lock; prefetch does not — prefetching is
+// not a transition, so it must not suppress concurrent map moveend → setBounds
+// → replaceState writes. The remaining router methods (back, forward, refresh)
+// aren't used from map-mounted components; if you need one and it triggers a
+// transition, extend this hook rather than reaching for useRouter directly.
 export const useMapRouter = () => {
   const router = useRouter();
   return useMemo(() => {
@@ -23,6 +24,8 @@ export const useMapRouter = () => {
       markNavigationPending();
       return router.replace(...args);
     };
-    return { push, replace };
+    const prefetch: typeof router.prefetch = (...args) =>
+      router.prefetch(...args);
+    return { push, replace, prefetch };
   }, [router]);
 };

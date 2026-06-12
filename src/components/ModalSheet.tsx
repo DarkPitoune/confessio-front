@@ -30,7 +30,10 @@ function ModalSheet({
 
   useEffect(() => {
     if (selectedChurch) sheetRef?.current?.snapTo(1);
-  }, [selectedChurch]);
+    // Gate on uuid so swapping the optimistic (partial) church for the full
+    // details doesn't re-trigger the snap animation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChurch?.uuid, sheetRef]);
 
   return (
     <ModalSheetContainer>

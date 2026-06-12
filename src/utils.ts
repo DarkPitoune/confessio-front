@@ -8,6 +8,11 @@ if (MAP_TILER_API_KEY === undefined)
 
 export const MOBILE_BREAKPOINT = 768;
 
+// Church details rarely change within a session. A non-zero staleTime lets the
+// several readers of ["churchDetails", uuid] (ChurchCard, the map, the loading
+// fallback) share one fetch instead of each refetching on mount.
+export const CHURCH_DETAILS_STALE_TIME = 5 * 60 * 1000;
+
 export type Bounds = {
   south: number;
   north: number;
