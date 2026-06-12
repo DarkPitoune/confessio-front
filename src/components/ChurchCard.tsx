@@ -503,6 +503,27 @@ const ChurchCard = ({
             </div>
           )}
 
+          {!isLoading && churchDetails && dayKeys.length === 0 && (
+            <p className="text-center text-white/55 py-6 px-5 text-sm">
+              Aucun horaire trouv&eacute; pour cette paroisse
+              {churchDetails.website?.home_url ? (
+                <>
+                  , visitez le{" "}
+                  <Link
+                    href={churchDetails.website.home_url}
+                    target="_blank"
+                    className="font-medium text-white/75 underline hover:text-white transition-colors"
+                  >
+                    site de la paroisse
+                  </Link>{" "}
+                  pour obtenir des d&eacute;tails.
+                </>
+              ) : (
+                "."
+              )}
+            </p>
+          )}
+
           <div className="flex flex-col items-center py-5 gap-3">
             <div className="flex items-center gap-3 px-3 bg-white/8 border border-white/12 rounded-full h-9">
               <button
@@ -678,12 +699,6 @@ const ChurchCard = ({
               Compl&eacute;ter les horaires de cette paroisse
             </Link>
           </div>
-
-          {!isLoading && churchDetails && dayKeys.length === 0 && (
-            <p className="text-center text-white/55 py-6 text-sm">
-              Aucun horaire disponible
-            </p>
-          )}
         </div>
       </ModalSheetScroller>
       {portalReady &&
