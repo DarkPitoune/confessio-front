@@ -104,7 +104,7 @@ test.describe("SEO smoke", () => {
     expect(res.status()).toBe(200);
     const xml = await res.text();
     expect(xml).toContain("<urlset");
-    expect(xml).toContain("<loc>https://new.confessio.fr</loc>");
+    expect(xml).toContain("<loc>https://confessio.fr</loc>");
 
     const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
       (m) => m[1] ?? "",
